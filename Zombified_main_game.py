@@ -75,7 +75,7 @@ def zone_normal_convert(x, y, zone):
         return (x,-y)
 
 #midpoint Line algo
-def mp_line_algo(x,y,xp,yp):
+def mp_line_algo(x,y,xp,yp,size=2):
     zone=0
     dy=yp-y
     dx=xp-x
@@ -107,7 +107,7 @@ def mp_line_algo(x,y,xp,yp):
     northeast=2*(dy-dx)
     d=2*dy-dx
     x0,y0=zone_normal_convert(x,y,zone)
-    draw_pixel(x0, y0)
+    draw_pixel(x0, y0,size)
     while x<xp:
         if d>0:
             d+=northeast
@@ -117,29 +117,50 @@ def mp_line_algo(x,y,xp,yp):
             d+=east
             x+=1  
         x0,y0=zone_normal_convert(x,y,zone)           
-        draw_pixel(x0, y0)
+        draw_pixel(x0, y0,size)
 
 #midpoint circle algo
-def midpointcircle(r, x_main, y_main):
+def midpointcircle(r, x_main, y_main,size=2):
     x=0
     y=r
     d=1-r
     while y>x:
-        draw_pixel(x+x_main,y_main+y)
-        draw_pixel(y+x_main,y_main-x)
-        draw_pixel(x_main-y,y_main+x)
-        draw_pixel(x_main-y,-x+y_main)
-        draw_pixel(x+x_main,-y+y_main)
-        draw_pixel(x_main-x,y+y_main)
-        draw_pixel(x_main-x,y_main-y)
-        draw_pixel(y+x_main,x+y_main)
+        draw_pixel(x+x_main,y_main+y,size)
+        draw_pixel(y+x_main,y_main-x,size)
+        draw_pixel(x_main-y,y_main+x,size)
+        draw_pixel(x_main-y,-x+y_main,size)
+        draw_pixel(x+x_main,-y+y_main,size)
+        draw_pixel(x_main-x,y+y_main,size)
+        draw_pixel(x_main-x,y_main-y,size)
+        draw_pixel(y+x_main,x+y_main,size)
         if d<0:
             d+=2*x+3
         else:
             d+=5+2*x-2*y
             y=y- 1
         x=x+1
-    
+
+
+def draw_filled_rectangle(x1,y1,x2,y2,color,outline=False):
+
+    if x1>x2:
+        x1,x2= x2,x1
+    if y1>y2:
+        y1,y2= y2,y1
+    glColor3fv(color)
+
+    mp_line_algo(x1,y1,x1,y2)  
+    mp_line_algo(x2,y1,x2,y2)  
+
+    for y in range(y1, y2 + 1):
+        mp_line_algo(x1, y, x2, y)  # Draw lines til we reach y2 from y1
+    if outline==True:
+        glColor3f(0.078,0.051,0.094)
+        mp_line_algo(x1,y1,x1,y2)  
+        mp_line_algo(x2,y1,x2,y2)  
+        mp_line_algo(x1,y1,x2,y1)  
+        mp_line_algo(x1,y2,x2,y2)
+
 def draw_pixel(x, y,size=2): #drawing the point
     glPointSize(size)
     glBegin(GL_POINTS)
@@ -147,12 +168,73 @@ def draw_pixel(x, y,size=2): #drawing the point
     glVertex2f(x,y)
     glEnd()
 ############################################################################################################
+#Background drawing functions
 
+def draw_tiles(x1,y1,x2,y2):
+    #tile_base
+    draw_filled_rectangle(x1,y1,x2,y2,[0.60,0.67,0.717],True)
+
+
+    #tile_highlight
+    glColor3fv([0.70,0.77,0.817])   
+    mp_line_algo(x2-4, y2-3.5, x2-4, y1+3.5, 5) #width of line =5
+    mp_line_algo(x2-4, y1+3.5, x1+3, y1+3.5, 5)  
+    #small_dots at the edges  
+    glColor3fv([0.29,0.27,0.317])
+    draw_pixel(x1+3, y1+3, 5)
+    draw_pixel(x1+3, y2-3.5, 5)
+    draw_pixel(x2-4, y1+3, 5)
+    draw_pixel(x2-4, y2-3.5, 5)
+
+
+    #variation1 cross lines 
+    glColor3fv([0.70,0.77,0.817])   
+    mp_line_algo((x1+x2)/2-4, y1+3, (x1+x2)/2-4, y2-4, 5) #highlight
+    mp_line_algo(x1+3, (y1+y2)/2-4, x2-4, (y1+y2)/2-4, 5)
+
+    glColor3fv([0.45,0.5,0.6])  
+    mp_line_algo((x1+x2)/2, y1+3, (x1+x2)/2, y2-4, 5)
+    mp_line_algo(x1+3, (y1+y2)/2, x2-4, (y1+y2)/2, 5)
+
+    #variation2 plus small in middle
+    glColor3fv([0.29,0.27,0.387])
+    mp_line_algo((x1+x2)/2, (y2+y1)/2+5, (x1+x2)/2, (y2+y1)/2-5, 5) #midcross
+    mp_line_algo((x1+x2)/2-5, (x1+x2)/2, (x1+x2)/2+5, (x1+x2)/2, 5)
+
+    # #variation3 double border 
+    #        
+    # glColor3fv([0.70,0.77,0.817])
+    # mp_line_algo(x1 + 5, y1 + 5, x1 + 5, y2 - 5, 3)  # Left inner border
+    # mp_line_algo(x2 - 5, y1 + 5, x2 - 5, y2 - 5, 3)  # Right inner border
+    # mp_line_algo(x1 + 5, y1 + 5, x2 - 5, y1 + 5, 3)  # Top inner border
+    # mp_line_algo(x1 + 5, y2 - 5, x2 - 5, y2 - 5, 3)  # Bottom inner border
+
+    #variation 4: cracked lines
+    glColor3fv([0.70,0.77,0.817])
+    mp_line_algo(x2-4, (y2+y1)/2-21, (x1+x2)/2+30, (y2+y1)/2-21, 5) 
+    mp_line_algo((x1+x2)/2+21,(y2+y1)/2-30, (x1+x2)/2+21, y1+3.5, 5)
+
+    mp_line_algo((x1+x2)/2+25,(y2+y1)/2-25, (x1+x2)/2+25, y1+3.5, 5) #highlight
+
+    glColor3fv([0.45,0.5,0.6])
+    mp_line_algo(x2-4, (y2+y1)/2-25, (x1+x2)/2+30, (y2+y1)/2-25, 5) #horizontal line
+    mp_line_algo((x1+x2)/2+25,(y2+y1)/2-30, (x1+x2)/2+25, y1+3.5, 5) #vertical line
+                #top edge crack
+
+    glColor3fv([0.70,0.77,0.817]) #highlight
+    mp_line_algo(x1+20, y2-3.5, x1+20, y2-12, 5) 
+    mp_line_algo(x1+20,y2-14, x1+14, y2-14, 5)
+    glColor3fv([0.45,0.5,0.6])
+    mp_line_algo(x1+25, y2-3.5, x1+25, y2-14, 5) 
+    mp_line_algo(x1+25,y2-15, x1+20, y2-15, 5)
+
+
+
+############################################################################################################
 #main function
 
 def mainfunc_animate():
-    # glColor3fv(1,0,0)
-    draw_pixel(200,200)
+    return None
 
 ############################################################################################################
 #input handling functions
@@ -226,9 +308,12 @@ def display():
     glLoadIdentity()
     
     iterate()
-    draw_pixel(200,200)
-    # glcolor3f(1,0,0)
+
+    glColor3f(1,0,0)
     midpointcircle(10, 250, 250)
+    # draw_filled_rectangle(100,100,200,200)
+    draw_tiles(100,100,200,200)
+
     glutSwapBuffers()
 def iterate():
     global screen_h, screen_w
@@ -242,7 +327,7 @@ def iterate():
 glutInit()
 glutInitWindowSize(screen_w, screen_h)
 glutInitWindowPosition(200,20)
-glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB)
+glutInitDisplayMode(GLUT_RGBA)
 
 glutCreateWindow(b"Spaceship Shooter")
 
