@@ -6,34 +6,20 @@ import random
 import numpy as np
 import time
 
+#to do: Use a loop to render shadows
+
 # Global Variables
 screen_w= 1280
 screen_h= 720
 
+tiles_iteration_list=[] #Stores random variation values so the floor doesn't change during gameplay
+#initializing the tiles variation list
+for _ in range(0,screen_w*screen_h,1000):
+    tiles_iteration_list.append(random.randint(1,50))
 
 ############################################################################################################
 ##-------------------------------------------##
 #classes
-
-class normal_circle:
-    def __init__(self):
-        self.x= random.randint(-240, 240)
-        self.y= 300
-        self.radius= 23
-
-class specialcircle:
-    def __init__(self):
-        self.x= random.randint(-240, 240)
-        self.y= 300
-        self.r= 25
-        self.ex_rate= 0.5
-        self.current_r= self.r
-        self.is_growing= True #true for growing, false for contraction
-        
-class shooter:
-    def __init__(self):
-        self.x = 0
-        self.color = [1, 1, 1]
 
 
 ##-------------------------------------------##
@@ -140,96 +126,126 @@ def midpointcircle(r, x_main, y_main,size=2):
             y=y- 1
         x=x+1
 
-
-def draw_filled_rectangle(x1,y1,x2,y2,color,outline=False):
-
+#draw square
+def draw_filled_rectangle(x1, y1, x2, y2, color):
     if x1>x2:
-        x1,x2= x2,x1
+        x1,x2=x2,x1
+
     if y1>y2:
-        y1,y2= y2,y1
+        y1,y2=y2,y1
+
+    width=x2-x1
+    height=y2-y1
+
     glColor3fv(color)
+    point_size=max(width,height)  #most of the time both will be same as it is a square
+    glPointSize(point_size)
 
-    mp_line_algo(x1,y1,x1,y2)  
-    mp_line_algo(x2,y1,x2,y2)  
+    center_x=(x1+x2)/2
+    center_y=(y1+y2)/2
 
-    for y in range(y1, y2 + 1):
-        mp_line_algo(x1, y, x2, y)  # Draw lines til we reach y2 from y1
-    if outline==True:
-        glColor3f(0.078,0.051,0.094)
-        mp_line_algo(x1,y1,x1,y2)  
-        mp_line_algo(x2,y1,x2,y2)  
-        mp_line_algo(x1,y1,x2,y1)  
-        mp_line_algo(x1,y2,x2,y2)
+    glBegin(GL_POINTS)
+    glVertex2i(int(center_x), int(center_y))
+    glEnd()
+
+def draw_square_outline(x1,y1,x2,y2,color,size=3):
+    glColor3fv(color)
+    mp_line_algo(x1,y1,x1,y2, size)  
+    mp_line_algo(x2,y1,x2,y2, size)   
+    mp_line_algo(x1,y1,x2,y1, size)   
+    mp_line_algo(x1,y2,x2,y2, size) 
 
 def draw_pixel(x, y,size=2): #drawing the point
     glPointSize(size)
     glBegin(GL_POINTS)
-    # glColor3fv(self.color)
     glVertex2f(x,y)
     glEnd()
+
 ############################################################################################################
 #Background drawing functions
 
-def draw_tiles(x1,y1,x2,y2):
+def draw_tiles(x1,y1,x2,y2,iteration):
+
+    # iteration= random.randint(1,100)
+    # print(iteration)
     #tile_base
-    draw_filled_rectangle(x1,y1,x2,y2,[0.60,0.67,0.717],True)
-
-
+    draw_filled_rectangle(x1,y1,x2,y2,[0.6078,0.6784,0.7176])
     #tile_highlight
-    glColor3fv([0.70,0.77,0.817])   
-    mp_line_algo(x2-4, y2-3.5, x2-4, y1+3.5, 5) #width of line =5
-    mp_line_algo(x2-4, y1+3.5, x1+3, y1+3.5, 5)  
+    glColor3fv([0.6745,0.7764,0.7803])   
+    mp_line_algo(x2-4, y2-3.5, x2-4, y1+3.5, 9) #width of line =9
+    mp_line_algo(x2-4, y1+3.5, x1+3, y1+3.5, 9)  
     #small_dots at the edges  
-    glColor3fv([0.29,0.27,0.317])
-    draw_pixel(x1+3, y1+3, 5)
-    draw_pixel(x1+3, y2-3.5, 5)
-    draw_pixel(x2-4, y1+3, 5)
-    draw_pixel(x2-4, y2-3.5, 5)
+    glColor3fv([0.490,0.545,0.659])
+    draw_pixel(x1+3, y1+3, 9)
+    draw_pixel(x1+3, y2-3.5, 9)
+    draw_pixel(x2-4, y1+3, 9)
+    draw_pixel(x2-4, y2-3.5, 9)
 
 
-    #variation1 cross lines 
-    glColor3fv([0.70,0.77,0.817])   
-    mp_line_algo((x1+x2)/2-4, y1+3, (x1+x2)/2-4, y2-4, 5) #highlight
-    mp_line_algo(x1+3, (y1+y2)/2-4, x2-4, (y1+y2)/2-4, 5)
+#variation part
 
-    glColor3fv([0.45,0.5,0.6])  
-    mp_line_algo((x1+x2)/2, y1+3, (x1+x2)/2, y2-4, 5)
-    mp_line_algo(x1+3, (y1+y2)/2, x2-4, (y1+y2)/2, 5)
+    if iteration==24 or iteration==12 or iteration==22 or iteration==18:
+        # #variation1 cross lines 
+        glColor3fv([0.6745,0.7764,0.7803])   
+        mp_line_algo((x1+x2)/2-4, y1+3, (x1+x2)/2-4, y2-4, 8) #highlight
+        mp_line_algo(x1+3, (y1+y2)/2-4, x2-4, (y1+y2)/2-4, 8)
 
-    #variation2 plus small in middle
-    glColor3fv([0.29,0.27,0.387])
-    mp_line_algo((x1+x2)/2, (y2+y1)/2+5, (x1+x2)/2, (y2+y1)/2-5, 5) #midcross
-    mp_line_algo((x1+x2)/2-5, (x1+x2)/2, (x1+x2)/2+5, (x1+x2)/2, 5)
-
-    # #variation3 double border 
-    #        
-    # glColor3fv([0.70,0.77,0.817])
-    # mp_line_algo(x1 + 5, y1 + 5, x1 + 5, y2 - 5, 3)  # Left inner border
-    # mp_line_algo(x2 - 5, y1 + 5, x2 - 5, y2 - 5, 3)  # Right inner border
-    # mp_line_algo(x1 + 5, y1 + 5, x2 - 5, y1 + 5, 3)  # Top inner border
-    # mp_line_algo(x1 + 5, y2 - 5, x2 - 5, y2 - 5, 3)  # Bottom inner border
-
-    #variation 4: cracked lines
-    glColor3fv([0.70,0.77,0.817])
-    mp_line_algo(x2-4, (y2+y1)/2-21, (x1+x2)/2+30, (y2+y1)/2-21, 5) 
-    mp_line_algo((x1+x2)/2+21,(y2+y1)/2-30, (x1+x2)/2+21, y1+3.5, 5)
-
-    mp_line_algo((x1+x2)/2+25,(y2+y1)/2-25, (x1+x2)/2+25, y1+3.5, 5) #highlight
-
-    glColor3fv([0.45,0.5,0.6])
-    mp_line_algo(x2-4, (y2+y1)/2-25, (x1+x2)/2+30, (y2+y1)/2-25, 5) #horizontal line
-    mp_line_algo((x1+x2)/2+25,(y2+y1)/2-30, (x1+x2)/2+25, y1+3.5, 5) #vertical line
-                #top edge crack
-
-    glColor3fv([0.70,0.77,0.817]) #highlight
-    mp_line_algo(x1+20, y2-3.5, x1+20, y2-12, 5) 
-    mp_line_algo(x1+20,y2-14, x1+14, y2-14, 5)
-    glColor3fv([0.45,0.5,0.6])
-    mp_line_algo(x1+25, y2-3.5, x1+25, y2-14, 5) 
-    mp_line_algo(x1+25,y2-15, x1+20, y2-15, 5)
+        glColor3fv([0.490,0.545,0.659])  
+        mp_line_algo((x1+x2)/2, y1+3, (x1+x2)/2, y2-4, 6)
+        mp_line_algo(x1+3, (y1+y2)/2, x2-4, (y1+y2)/2, 6)
+        if iteration ==12 or iteration ==22:
+            # #variation2 plus small in middle
+            glColor3fv([0.33,0.313,0.439])
+            mp_line_algo((x1+x2)/2, (y2+y1)/2+5, (x1+x2)/2, (y2+y1)/2-5, 6) #midcross
+            mp_line_algo((x1+x2)/2-5, (y1+y2)/2, (x1+x2)/2+5, (y1+y2)/2, 6)
 
 
+    if iteration<4 or iteration==18:
+        # #variation 4: cracked lines
+        glColor3fv([0.6745,0.7764,0.7803])
+        mp_line_algo(x2-4, (y2+y1)/2-21, (x1+x2)/2+30, (y2+y1)/2-21, 6) 
+        mp_line_algo((x1+x2)/2+21,(y2+y1)/2-30, (x1+x2)/2+21, y1+3.5, 6)
 
+        mp_line_algo((x1+x2)/2+25,(y2+y1)/2-25, (x1+x2)/2+25, y1+3.5, 8) #highlight
+
+        glColor3fv([0.490,0.545,0.659])
+        mp_line_algo(x2-4, (y2+y1)/2-25, (x1+x2)/2+30, (y2+y1)/2-25, 6) #horizontal line
+        mp_line_algo((x1+x2)/2+25,(y2+y1)/2-30, (x1+x2)/2+25, y1+3.5, 6) #vertical line
+                    #top edge crack
+
+        glColor3fv([0.6745,0.7764,0.7803]) #highlight
+        mp_line_algo(x1+20, y2-3.5, x1+20, y2-12, 8) 
+        mp_line_algo(x1+20,y2-14, x1+14, y2-14, 8)
+        glColor3fv([0.490,0.545,0.659])
+        mp_line_algo(x1+25, y2-3.5, x1+25, y2-14, 6) 
+        mp_line_algo(x1+25,y2-15, x1+20, y2-15,6)
+
+    #outlines of the tiles
+    draw_square_outline(x1,y1,x2,y2,[0.16,0.125,0.2],5)
+
+
+
+def generate_floor(screen_h,screen_w):
+    iteration=0
+    global tiles_iteration_list
+    for i in range(0,screen_h-100,100):
+        for j in range(0,screen_w,100):
+            draw_tiles(j,i,j+100,i+100,tiles_iteration_list[iteration])
+            iteration+=1
+            # print("iteration: ",iteration,"Value: ", tiles_iteration_list[iteration])
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+    glColor4f(0.15, 0.1, 0.35, 0.2)  # Semi-transparent blue color
+    draw_pixel(-40,100,200)
+    draw_pixel(-40,300,200)
+    draw_pixel(-40,500,200)
+    draw_pixel(160,440,200)
+    draw_pixel(360,440,200)
+    draw_pixel(560,440,200)
+    draw_pixel(65,335,10)
+    glDisable(GL_BLEND)  # Disable blending after the line is drawn
+    
 ############################################################################################################
 #main function
 
@@ -309,10 +325,7 @@ def display():
     
     iterate()
 
-    glColor3f(1,0,0)
-    midpointcircle(10, 250, 250)
-    # draw_filled_rectangle(100,100,200,200)
-    draw_tiles(100,100,200,200)
+    generate_floor(screen_h, screen_w)
 
     glutSwapBuffers()
 def iterate():
@@ -320,7 +333,7 @@ def iterate():
     glViewport(0, 0, screen_w, screen_h)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(0.0, screen_w, 0.0, screen_h, 0.0, 1.0) 
+    glOrtho(0.0, screen_w, 0.0, screen_h, 0, 1.0) 
     glMatrixMode (GL_MODELVIEW)
     glLoadIdentity()
     
@@ -329,7 +342,7 @@ glutInitWindowSize(screen_w, screen_h)
 glutInitWindowPosition(200,20)
 glutInitDisplayMode(GLUT_RGBA)
 
-glutCreateWindow(b"Spaceship Shooter")
+glutCreateWindow(b"Zombified: Shooter Game")
 
 
 # uq_cir=normal_circle()
@@ -343,4 +356,7 @@ glutDisplayFunc(display)
 glutIdleFunc(mainfunc_animate)
 # glutMouseFunc(mouseListener)
 # glutKeyboardFunc(keyboardListener)
+
+
+
 glutMainLoop()
