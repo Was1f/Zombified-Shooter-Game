@@ -694,6 +694,39 @@ def mainfunc_animate():
 
 ############################################################################################################
 #input handling functions
+player_shooter = Player(425, 325, rotation=270)
+bullet=None
+def keyboardListener(key,x,y):
+    global player_shooter
+    if key==b'd': 
+        if player_shooter.x<740:  
+            player_shooter.x+=30
+    elif key==b'a': 
+        if player_shooter.x>100:
+            player_shooter.x-=30
+    elif key==b'w': 
+        if player_shooter.y<500: 
+            player_shooter.y+=30
+    elif key==b's': 
+        if player_shooter.y>100: 
+            player_shooter.y-=30
+
+    elif key==b' ': #if key==b' ' and bullet_active==False:
+        bullet1=Bullet(player_shooter.x+100, player_shooter.y+100, player_shooter.rotation)
+
+    elif key==b'k':
+        player_shooter.rotation-=10
+
+    elif key==b'j':
+        player_shooter.rotation+=10
+    elif key==b'w' and key==b'd':
+        if player_shooter.y>100: 
+            player_shooter.y-=10
+
+        
+        
+       #bullet_active=True
+    glutPostRedisplay()
 
 # def keyboardListener(key, x, y):
 #     global bullet,is_paused,game_over_state,player_shooter
@@ -758,7 +791,7 @@ def mainfunc_animate():
 
 ############################################################################################################ 
 # initialize
-player_shooter=Player(150,250,rotation=0)
+#player_shooter=Player(150,250,rotation=0)
 zombies=[]
 special_zombies = []
 
@@ -834,6 +867,6 @@ glutCreateWindow(b"Zombified: Shooter Game")
 glutDisplayFunc(display)
 glutIdleFunc(mainfunc_animate)
 # glutMouseFunc(mouseListener)
-# glutKeyboardFunc(keyboardListener)
+glutKeyboardFunc(keyboardListener)
 
 glutMainLoop()
