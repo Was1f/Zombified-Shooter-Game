@@ -10,7 +10,7 @@ import math
 # Global Variables
 screen_w= 640
 screen_h= 540
-current_health=100
+current_health=50
 get_highscore = 0
 current_score = 0   
 is_paused = False
@@ -756,6 +756,7 @@ def mainfunc_animate():
                         i.timer-=1
            
             if current_health<=0:
+                current_health=0
                 gameover=True
                 is_paused=True
                 print("Game Over")
@@ -861,49 +862,42 @@ def draw_pause_menu():
     draw_button(base_x, base_y, button_width, button_height, "Leave")
 
 def draw_health_bar(x, y, width, height, health):
-    # Draw health bar background using mp_line_algo and draw_pixel
-    for i in range(x, x + width, 2):
-        for j in range(y, y + height, 2):
-            draw_pixel(i, j, 2)
+    
+    glColor3f(0,0.3,0.3)
     # Draw health bar outline
-    mp_line_algo(x, y, x + width, y, 2)
-    mp_line_algo(x + width, y, x + width, y + height, 2)
-    mp_line_algo(x + width, y + height, x, y + height, 2)
-    mp_line_algo(x, y + height, x, y, 2)
+    mp_line_algo(x, y, x + width, y, 20)
+
     # Draw current health
-    health_width = width * (health / 100)
-    for i in range(x, x + int(health_width), 2):
-        for j in range(y, y + height, 2):
-            draw_pixel(i, j, 2)
+    glColor3f(0.5,1,1)
+    if health>0:
+        health_width = width * (health / 100)
+        mp_line_algo(x, y, x + health_width, y, 17)
+    else: 
+        mp_line_algo(x, y, x, y, 17)
 
 # Draw pause icon
 def draw_pause_icon(x, y, size):
     bar_width = size / 4
     spacing = bar_width / 2
     # Draw left bar
-    for i in range(int(x), int(x + bar_width), 2):
-        for j in range(int(y), int(y + size), 2):
-            draw_pixel(i, j, 2)
+    mp_line_algo(x, y, x, y + size/1.5, bar_width)
     # Draw right bar
-    for i in range(int(x + bar_width + spacing), int(x + 2 * bar_width + spacing), 2):
-        for j in range(int(y), int(y + size), 2):
-            draw_pixel(i, j, 2)
-
+    mp_line_algo(x+bar_width+spacing,y,x+bar_width+spacing,y+size/1.5,bar_width)
 # Draw top rectangle
 def draw_top_rectangle():
-    # Draw black rectangle using mp_line_algo and draw_pixel
-    for i in range(0, screen_w, 2):
-        for j in range(screen_h - 80, screen_h, 2):
-            draw_pixel(i, j, 2)
+    glColor3f(0, 0, 0) 
+    mp_line_algo(0,screen_h-60,screen_w,screen_h-60,50)
+    mp_line_algo(0,screen_h-20,screen_w,screen_h-20,50)
     # Health display
-    glColor3f(0, 1, 1)  # White for text
-    render_text(10, screen_h - 35, f"Health: {current_health}", GLUT_BITMAP_HELVETICA_18)
+    glColor3f(0.5,1,1)
+    render_text(10, screen_h-35, f"Health: {current_health}", GLUT_BITMAP_HELVETICA_18)
     # Health bar
-    draw_health_bar(10, screen_h - 70, 200, 20, current_health)
+    draw_health_bar(10, screen_h-55,200,20, current_health)
     # Score display
-    render_text(400, screen_h - 60, f"Score: {current_score}", GLUT_BITMAP_TIMES_ROMAN_24)
+    glColor3f(0.5,1,1)
+    render_text(350, screen_h-50, f"Score: {current_score}", GLUT_BITMAP_TIMES_ROMAN_24)
     # Pause icon
-    draw_pause_icon(screen_w - 60, screen_h - 50, 20)
+    draw_pause_icon(screen_w-60, screen_h-50,20)
 
 
 ############################################################################################################ 
@@ -980,7 +974,8 @@ def display():
     if is_paused:
         draw_pause_menu()
     else:
-        # generate_floor(screen_h, screen_w)
+        
+        generate_floor(screen_h, screen_w)
         draw_player(player_shooter)
         for zombie in zombies:
             draw_zombie(zombie)
@@ -989,6 +984,8 @@ def display():
         for bullet in bullet_list:
             draw_bullet(bullet)
         trigger_blood_splatter(special_zombies[0])
+
+        draw_top_rectangle()
     glutSwapBuffers()
 def iterate():
     global screen_h, screen_w
