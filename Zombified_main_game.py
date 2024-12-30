@@ -313,12 +313,12 @@ def draw_player(player):
             mp_line_algo(p1[0], p1[1], p2[0], p2[1],size)
 
     #left hand
-    rotate_point_and_draw(x-25, y-7,6,x-10,y+41,[0.498,0.207,0.254])
-    rotate_point_and_draw(x-30, y-8,5,x-15,y+43,[0.498,0.207,0.254])
-    rotate_point_and_draw(x-35, y-7,6,x-20,y+41,[0.498,0.207,0.254])
+    rotate_point_and_draw(x-25, y-7,6,x-10,y+41,[0.4784,0.043,0.796])
+    rotate_point_and_draw(x-30, y-8,5,x-15,y+43,[0.4784,0.043,0.796])
+    rotate_point_and_draw(x-35, y-7,6,x-20,y+41,[0.4784,0.043,0.796])
 
-    rotate_point_and_draw(x-35, y-7,6,x-20,y+41,[0.39,0.172,0.207])
-    rotate_point_and_draw(x-35, y-7,6,x-10,y-7,[0.39,0.172,0.207])
+    rotate_point_and_draw(x-35, y-7,6,x-20,y+41,[0.3784,0.023,0.596])
+    rotate_point_and_draw(x-35, y-7,6,x-10,y-7,[0.3784,0.023,0.596])
 
     rotate_point_and_draw(x-10, y+38,4,x-25,y+38,[0.93,0.549,0.48])
     rotate_point_and_draw(x-8, y+41,4,x-26,y+41,[0.976,0.745,0.65]) #handskin
@@ -332,12 +332,12 @@ def draw_player(player):
 
 
     #right hand
-    rotate_point_and_draw(x+25, y-7,6,x+10,y+41,[0.498,0.207,0.254])
-    rotate_point_and_draw(x+30, y-8,5,x+15,y+43,[0.498,0.207,0.254])
-    rotate_point_and_draw(x+35, y-7,6,x+20,y+41,[0.498,0.207,0.254])
+    rotate_point_and_draw(x+25, y-7,6,x+10,y+41,[0.4784,0.043,0.796])
+    rotate_point_and_draw(x+30, y-8,5,x+15,y+43,[0.4784,0.043,0.796])
+    rotate_point_and_draw(x+35, y-7,6,x+20,y+41,[0.4784,0.043,0.796])
 
-    rotate_point_and_draw(x+35, y-7,6,x+20,y+41,[0.39,0.172,0.207])
-    rotate_point_and_draw(x+35, y-7,6,x+10,y-7,[0.39,0.172,0.207])
+    rotate_point_and_draw(x+35, y-7,6,x+20,y+41,[0.3784,0.023,0.596])
+    rotate_point_and_draw(x+35, y-7,6,x+10,y-7,[0.3784,0.023,0.596])
 
     rotate_point_and_draw(x+10, y+38,4,x+25,y+38,[0.93,0.549,0.48])
     rotate_point_and_draw(x+8, y+41,4,x+25,y+41,[0.976,0.745,0.65]) #handskin
@@ -675,11 +675,11 @@ def display():
     
     iterate()
     generate_floor(screen_h, screen_w)
-    zombie1 = Player(100, 200, rotation=0)
+    zombie1 = Player(150, 250, rotation=0)
     zombie2 = Zombie(300, 200, rotation=0)
     zombie3 = Special_Zombie(556, 200, rotation=180)
-    zombie4 = Player(100, 600, rotation=90)
-    zombie5 = Player(500, 500, rotation=215)
+    zombie4 = Player(150, 650, rotation=90)
+    zombie5 = Player(550, 550, rotation=215)
     # draw_zombie(zombie1)
     draw_zombie(zombie2)
     draw_special_zombie(zombie3)
