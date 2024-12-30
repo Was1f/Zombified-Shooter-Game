@@ -7,8 +7,6 @@ import numpy as np
 import time
 import math
 
-#to do: Use a loop to render shadows
-
 # Global Variables
 screen_w= 840
 screen_h= 740
@@ -255,6 +253,7 @@ class Zombie:
         self.y=y
         self.rotation=rotation
         self.is_attacking=False
+        self.bloodactive=False
     def rotate_point(self,point,angle,center):
             angle_rad=math.radians(angle)
             x,y=point
@@ -272,6 +271,7 @@ class Special_Zombie:
         self.y=y
         self.rotation=rotation
         self.is_attacking=False
+        self.bloodactive=False
 
     def rotate_point(self,point,angle,center):
             angle_rad=math.radians(angle)
@@ -299,6 +299,48 @@ class Player:
             y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
             # print(x_new+cx,y_new+cy)
             return (x_new+cx,y_new+cy)
+
+class Bullet:
+    def __init__(self, x, y, rotation=0, speed=10):
+        self.x = x
+        self.y = y
+        self.rotation = rotation
+        self.speed = speed
+        self.is_active = True  # to track whether the bullet is still active
+
+    def move(self):
+        # Calculate new position based on the rotation and speed
+        angle_rad = math.radians(self.rotation)
+        self.x += self.speed * math.cos(angle_rad)
+        self.y += self.speed * math.sin(angle_rad)
+
+    def rotate_point(self, point, angle, center):
+        angle_rad = math.radians(angle)
+        x, y = point
+        cx, cy = center
+        x -= cx
+        y -= cy
+        x_new = x * math.cos(angle_rad) - y * math.sin(angle_rad)
+        y_new = x * math.sin(angle_rad) + y * math.cos(angle_rad)
+        return (x_new + cx, y_new + cy)
+
+def draw_bullet(bullet):
+    x, y=bullet.x, bullet.y
+    rotation=bullet.rotation
+
+    def rotate_point_and_draw(x1, y1, size, x2, y2, color):
+        point1=[x1, y1]
+        point2=[x2, y2]
+        center=[x, y]
+        p1=bullet.rotate_point(point1,rotation,center)
+        p2=bullet.rotate_point(point2,rotation,center)
+        glColor3f(color[0], color[1], color[2])
+        mp_line_algo(p1[0], p1[1], p2[0], p2[1], size)
+
+    rotate_point_and_draw(x,y,4,x +10,y,[1,0,0])  # red bullet line
+
+    rotate_point_and_draw(x,y,2,x+10,y,[0.7, 0.2, 0.2])  # outline for bullet
+
 def draw_player(player):
     x, y = player.x, player.y
     rotation = player.rotation
@@ -411,8 +453,6 @@ def draw_player(player):
 
     rotate_point_and_draw(x-8,y+73,2,x+8,y+73,[0.117,0.113,0.125])
 
-
-
         
 def draw_zombie(zombie):
     x, y = zombie.x, zombie.y
@@ -502,8 +542,7 @@ def draw_zombie(zombie):
     rotate_point_and_draw(x+20,y+20,4,x+20,y-20,[0.047,0.103,0.0]) 
     rotate_point_and_draw(x-20, y+20,4,x-20,y-20,[0.047,0.103,0.0])
     rotate_point_and_draw(x-20, y-20,4,x+20,y-20,[0.047,0.103,0.0])
-
-    
+ 
 def draw_special_zombie(zombie):
     scale_factor = 1.5  # Adjust scale factor as needed
     x, y = zombie.x, zombie.y
@@ -593,6 +632,35 @@ def draw_special_zombie(zombie):
     rotate_point_and_draw(x-20, y+20,4,x-20,y-20,[0.094,0.086,0.066])
     rotate_point_and_draw(x-20, y-20,4,x+20,y-20,[0.094,0.086,0.066])
 
+def blood_splatter(position):
+    dominant_red=[1,0.2,0]
+    darker_red_1=[0.85, 0.1, 0.1]
+    darker_red_2=[0.75, 0, 0]
+    colors=[dominant_red]*10+[darker_red_1, darker_red_2] 
+    x,y=position
+    glColor3fv(dominant_red)
+    draw_pixel(x,y,10)
+    distance=[2,3,4,5,6,7,8,9,10,9,8,7,22,6,4,3,2,5,3,4,9,12,15,13,14,25,20,25,21,22,27,25,25,9,32,26,15,15,16,16,17,29,12,12,13,13,14,14,15,8,8,7,7,9,9,4,3,2,2,14,5,6]
+    for i in range(1,60): 
+        angle=random.uniform(0,2*math.pi)
+        
+        coin_toss=random.uniform(0,1)
+        if coin_toss==1:
+            scatter_x=x+int(math.cos(angle)*distance[i])
+            scatter_y=y+int(math.sin(angle)*distance[i])
+        else:
+            scatter_x=x-int(math.cos(angle)*distance[i])
+            scatter_y=y-int(math.sin(angle)*distance[i])
+        droplet_size=random.randint(2,10)
+        blood_shade=random.choice(colors)
+        glColor3fv(blood_shade)
+        draw_pixel(scatter_x, scatter_y,droplet_size)
+
+
+def trigger_blood_splatter(zombie):
+    if zombie.bloodactive:
+        for _ in range(1): 
+            blood_splatter((zombie.x,zombie.y))
 
         
   
@@ -686,9 +754,12 @@ def display():
     draw_player(zombie1)
     draw_player(zombie4)
     draw_player(zombie5)
+    bullet1=Bullet(360, 556, rotation=45)
+    draw_bullet(bullet1)
     # draw_zombie(zombie3)
     # draw_zombie(zombie4)
     # draw_zombie(zombie5)
+    trigger_blood_splatter(zombie2)
     glutSwapBuffers()
 def iterate():
     global screen_h, screen_w
