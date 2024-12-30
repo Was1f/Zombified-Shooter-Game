@@ -10,6 +10,13 @@ import math
 # Global Variables
 screen_w= 640
 screen_h= 540
+current_health=100
+get_highscore = 0
+current_score = 0   
+is_paused = False
+gameover=False
+difficulty_level = "Easy"
+
 
 tiles_iteration_list=[] #Stores random variation values so the floor doesn't change during gameplay
 #initializing the tiles variation list
@@ -17,8 +24,9 @@ for _ in range(0,screen_w*screen_h,1000):
     tiles_iteration_list.append(random.randint(1,50))
 
 
-
-
+TARGET_FPS=30
+FRAME_TIME= 1/TARGET_FPS
+last_time = time.time()
 ############################################################################################################
 ##-------------------------------------------##
 #classes
@@ -30,6 +38,7 @@ class Zombie:
         self.rotation=rotation
         self.is_attacking=False
         self.bloodactive=False
+        self.timer=5
     def rotate_point(self,point,angle,center):
             angle_rad=math.radians(angle)
             x,y=point
@@ -48,6 +57,7 @@ class Special_Zombie:
         self.rotation=rotation
         self.is_attacking=False
         self.bloodactive=False
+        self.timer=5
 
     def rotate_point(self,point,angle,center):
             angle_rad=math.radians(angle)
@@ -665,6 +675,23 @@ def trigger_blood_splatter(zombie):
         for _ in range(1): 
             blood_splatter((zombie.x,zombie.y))
 
+def checkIfCollision(player,zombie):
+    player_min_x=player.x-35
+    player_max_x=player.x+35
+    player_min_y=player.y-20
+    player_max_y=player.y+70
+
+    zombie_min_x=zombie.x-35
+    zombie_max_x=zombie.x+35
+    zombie_min_y=zombie.y-20
+    zombie_max_y=zombie.y+45
+
+
+    if player_max_x>=zombie_min_x and player_min_x<=zombie_max_x:
+        if player_max_y>=zombie_min_y and player_min_y<=zombie_max_y:
+            return True 
+
+    return False
 def update_zombie_pos(zombie,player,speed=10):
     direction_x=player.x-zombie.x
     direction_y=player.y-zombie.y
@@ -681,15 +708,55 @@ def update_zombie_pos(zombie,player,speed=10):
 #main function
 
 def mainfunc_animate():
-    global player_shooter,zombies,special_zombies
+    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time
 
-    # Update each zombie's position
-    for zoms in zombies:
-        update_zombie_pos(zoms,player_shooter) #need to update speed accoring to difficulty level
-    for sup_zoms in special_zombies:
-        update_zombie_pos(sup_zoms,player_shooter)
+    current_time=time.time()
+    elapsed_time=current_time-last_time
 
-    # Redraw the scene
+    if elapsed_time >= FRAME_TIME:
+        last_time = current_time
+        if difficulty_level == "Easy":
+            speed = 2
+            damage_combo=1
+        elif difficulty_level == "Medium":
+            speed = 4
+            damage_combo=2
+        elif difficulty_level == "Hard":
+            speed = 8
+            damage_combo=3
+        if not is_paused:
+            for zoms in zombies:
+                update_zombie_pos(zoms,player_shooter,speed) #need to update speed accoring to difficulty level
+            for sup_zoms in special_zombies:
+                update_zombie_pos(sup_zoms,player_shooter,speed)
+
+
+            for i in zombies:
+                if checkIfCollision(i,player_shooter):
+                    if i.timer==0:
+                        current_health-=1* damage_combo
+                        print("collision")
+                        print(current_health)
+                        i.timer=5
+                    else:
+                        i.timer-=1
+            for i in special_zombies:
+                if checkIfCollision(i,player_shooter):
+                    if i.timer==0:
+                        current_health-=3* damage_combo
+                        print("Special collision")
+                        print(current_health)
+                        i.timer=5
+                    else:
+                        i.timer-=1
+           
+            if current_health<=0:
+                gameover=True
+                is_paused=True
+                print("Game Over")
+    else:
+        return 
+
     glutPostRedisplay()
 
 
@@ -738,7 +805,81 @@ def keyboardListener(key,x,y):
 ############################################################################################################
 #UI Functions
 
+def render_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
+    glRasterPos2f(x, y)
+    for char in text:
+        glutBitmapCharacter(font, ord(char))
 
+# Draw health bar
+def draw_button(x, y, width, height, label):
+    # Draw button background using mp_line_algo and draw_pixel
+    for i in range(x, x + width, 2):
+        for j in range(y, y + height, 2):
+            draw_pixel(i, j, 2)
+    # Draw button outline
+    mp_line_algo(x, y, x + width, y, 2)
+    mp_line_algo(x + width, y, x + width, y + height, 2)
+    mp_line_algo(x + width, y + height, x, y + height, 2)
+    mp_line_algo(x, y + height, x, y, 2)
+    # Draw button label
+    glColor3f(1, 1, 1)  # Text color
+    render_text(x + 10, y + height / 4, label)
+
+def draw_pause_menu():
+    button_width, button_height = 200, 50
+    spacing = 20
+    base_x = (screen_w - button_width) / 2
+    base_y = (screen_h - (button_height * 4 + spacing * 3)) / 2
+    # Draw buttons
+    draw_button(base_x, base_y + (button_height + spacing) * 3, button_width, button_height, "Return")
+    draw_button(base_x, base_y + (button_height + spacing) * 2, button_width, button_height, "Restart")
+    draw_button(base_x, base_y + (button_height + spacing) * 1, button_width, button_height, f"Difficulty: {difficulty_level}")
+    draw_button(base_x, base_y, button_width, button_height, "Leave")
+
+def draw_health_bar(x, y, width, height, health):
+    # Draw health bar background using mp_line_algo and draw_pixel
+    for i in range(x, x + width, 2):
+        for j in range(y, y + height, 2):
+            draw_pixel(i, j, 2)
+    # Draw health bar outline
+    mp_line_algo(x, y, x + width, y, 2)
+    mp_line_algo(x + width, y, x + width, y + height, 2)
+    mp_line_algo(x + width, y + height, x, y + height, 2)
+    mp_line_algo(x, y + height, x, y, 2)
+    # Draw current health
+    health_width = width * (health / 100)
+    for i in range(x, x + int(health_width), 2):
+        for j in range(y, y + height, 2):
+            draw_pixel(i, j, 2)
+
+# Draw pause icon
+def draw_pause_icon(x, y, size):
+    bar_width = size / 4
+    spacing = bar_width / 2
+    # Draw left bar
+    for i in range(int(x), int(x + bar_width), 2):
+        for j in range(int(y), int(y + size), 2):
+            draw_pixel(i, j, 2)
+    # Draw right bar
+    for i in range(int(x + bar_width + spacing), int(x + 2 * bar_width + spacing), 2):
+        for j in range(int(y), int(y + size), 2):
+            draw_pixel(i, j, 2)
+
+# Draw top rectangle
+def draw_top_rectangle():
+    # Draw black rectangle using mp_line_algo and draw_pixel
+    for i in range(0, screen_w, 2):
+        for j in range(screen_h - 80, screen_h, 2):
+            draw_pixel(i, j, 2)
+    # Health display
+    glColor3f(0, 1, 1)  # White for text
+    render_text(10, screen_h - 35, f"Health: {current_health}", GLUT_BITMAP_HELVETICA_18)
+    # Health bar
+    draw_health_bar(10, screen_h - 70, 200, 20, current_health)
+    # Score display
+    render_text(400, screen_h - 60, f"Score: {current_score}", GLUT_BITMAP_TIMES_ROMAN_24)
+    # Pause icon
+    draw_pause_icon(screen_w - 60, screen_h - 50, 20)
 
 
 ############################################################################################################ 
@@ -800,22 +941,32 @@ for _ in range(2):  # need to adjust the zombie spawning based on difficulty lev
 for _ in range(1):  
     spawn_special_zombie()
 
+def restart(): #need to fix this later so a fresh match starts
+    global current_health, current_score, get_highscore
+    if current_score>get_highscore:
+        get_highscore=current_score
+    current_health = 100
+    current_score = 0
 
 #glui functions
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
-    
     iterate()
-    generate_floor(screen_h, screen_w)
-    draw_player(player_shooter)
-    for zombie in zombies:
-        draw_zombie(zombie)
-    for special_zombie in special_zombies:
-        draw_special_zombie(special_zombie)
-    bullet1 = Bullet(360, 556, rotation=45)
-    draw_bullet(bullet1)
-    trigger_blood_splatter(special_zombies[0])
+
+    if is_paused:
+        draw_pause_menu()
+    else:
+
+        # generate_floor(screen_h, screen_w)
+        draw_player(player_shooter)
+        for zombie in zombies:
+            draw_zombie(zombie)
+        for special_zombie in special_zombies:
+            draw_special_zombie(special_zombie)
+        bullet1 = Bullet(360, 556, rotation=45)
+        draw_bullet(bullet1)
+        trigger_blood_splatter(special_zombies[0])
     glutSwapBuffers()
 def iterate():
     global screen_h, screen_w
