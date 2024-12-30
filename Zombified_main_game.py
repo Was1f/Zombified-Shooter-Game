@@ -8,8 +8,8 @@ import time
 import math
 
 # Global Variables
-screen_w= 840
-screen_h= 740
+screen_w= 640
+screen_h= 540
 
 tiles_iteration_list=[] #Stores random variation values so the floor doesn't change during gameplay
 #initializing the tiles variation list
@@ -23,6 +23,82 @@ for _ in range(0,screen_w*screen_h,1000):
 ##-------------------------------------------##
 #classes
 
+class Zombie:
+    def __init__(self, x, y, rotation=0):
+        self.x=x
+        self.y=y
+        self.rotation=rotation
+        self.is_attacking=False
+        self.bloodactive=False
+    def rotate_point(self,point,angle,center):
+            angle_rad=math.radians(angle)
+            x,y=point
+            cx,cy=center
+            x-=cx
+            y-=cy
+            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
+            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
+            # print(x_new+cx,y_new+cy)
+            return (x_new+cx,y_new+cy)
+        
+class Special_Zombie:
+    def __init__(self, x, y, rotation=0):
+        self.x=x
+        self.y=y
+        self.rotation=rotation
+        self.is_attacking=False
+        self.bloodactive=False
+
+    def rotate_point(self,point,angle,center):
+            angle_rad=math.radians(angle)
+            x,y=point
+            cx,cy=center
+            x-=cx
+            y-=cy
+            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
+            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
+            # print(x_new+cx,y_new+cy)
+            return (x_new+cx,y_new+cy)
+
+class Player:
+    def __init__(self, x, y, rotation=0):
+        self.x=x
+        self.y=y
+        self.rotation=rotation
+    def rotate_point(self,point,angle,center):
+            angle_rad=math.radians(angle)
+            x,y=point
+            cx,cy=center
+            x-=cx
+            y-=cy
+            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
+            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
+            # print(x_new+cx,y_new+cy)
+            return (x_new+cx,y_new+cy)
+
+class Bullet:
+    def __init__(self, x, y, rotation=0, speed=10):
+        self.x = x
+        self.y = y
+        self.rotation = rotation
+        self.speed = speed
+        self.is_active = True  # to track whether the bullet is still active
+
+    def move(self):
+        # Calculate new position based on the rotation and speed
+        angle_rad = math.radians(self.rotation)
+        self.x += self.speed * math.cos(angle_rad)
+        self.y += self.speed * math.sin(angle_rad)
+
+    def rotate_point(self, point, angle, center):
+        angle_rad = math.radians(angle)
+        x, y = point
+        cx, cy = center
+        x -= cx
+        y -= cy
+        x_new = x * math.cos(angle_rad) - y * math.sin(angle_rad)
+        y_new = x * math.sin(angle_rad) + y * math.cos(angle_rad)
+        return (x_new + cx, y_new + cy)
 
 ##-------------------------------------------##
 #zone conversion functions and midpoint circle/line algo
@@ -250,82 +326,6 @@ def generate_floor(screen_h,screen_w):
     draw_pixel(65,515,10)
     glDisable(GL_BLEND)  
 
-class Zombie:
-    def __init__(self, x, y, rotation=0):
-        self.x=x
-        self.y=y
-        self.rotation=rotation
-        self.is_attacking=False
-        self.bloodactive=False
-    def rotate_point(self,point,angle,center):
-            angle_rad=math.radians(angle)
-            x,y=point
-            cx,cy=center
-            x-=cx
-            y-=cy
-            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
-            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
-            # print(x_new+cx,y_new+cy)
-            return (x_new+cx,y_new+cy)
-        
-class Special_Zombie:
-    def __init__(self, x, y, rotation=0):
-        self.x=x
-        self.y=y
-        self.rotation=rotation
-        self.is_attacking=False
-        self.bloodactive=False
-
-    def rotate_point(self,point,angle,center):
-            angle_rad=math.radians(angle)
-            x,y=point
-            cx,cy=center
-            x-=cx
-            y-=cy
-            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
-            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
-            # print(x_new+cx,y_new+cy)
-            return (x_new+cx,y_new+cy)
-
-class Player:
-    def __init__(self, x, y, rotation=0):
-        self.x=x
-        self.y=y
-        self.rotation=rotation
-    def rotate_point(self,point,angle,center):
-            angle_rad=math.radians(angle)
-            x,y=point
-            cx,cy=center
-            x-=cx
-            y-=cy
-            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
-            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
-            # print(x_new+cx,y_new+cy)
-            return (x_new+cx,y_new+cy)
-
-class Bullet:
-    def __init__(self, x, y, rotation=0, speed=10):
-        self.x = x
-        self.y = y
-        self.rotation = rotation
-        self.speed = speed
-        self.is_active = True  # to track whether the bullet is still active
-
-    def move(self):
-        # Calculate new position based on the rotation and speed
-        angle_rad = math.radians(self.rotation)
-        self.x += self.speed * math.cos(angle_rad)
-        self.y += self.speed * math.sin(angle_rad)
-
-    def rotate_point(self, point, angle, center):
-        angle_rad = math.radians(angle)
-        x, y = point
-        cx, cy = center
-        x -= cx
-        y -= cy
-        x_new = x * math.cos(angle_rad) - y * math.sin(angle_rad)
-        y_new = x * math.sin(angle_rad) + y * math.cos(angle_rad)
-        return (x_new + cx, y_new + cy)
 
 def draw_bullet(bullet):
     x, y=bullet.x, bullet.y
@@ -665,7 +665,7 @@ def trigger_blood_splatter(zombie):
         for _ in range(1): 
             blood_splatter((zombie.x,zombie.y))
 
-def update_zombie_pos(zombie,player,speed=20):
+def update_zombie_pos(zombie,player,speed=10):
     direction_x=player.x-zombie.x
     direction_y=player.y-zombie.y
     distance=math.sqrt(direction_x**2+direction_y**2)
@@ -674,7 +674,8 @@ def update_zombie_pos(zombie,player,speed=20):
         direction_y/=distance
     zombie.x+=direction_x*speed
     zombie.y+=direction_y*speed
-        
+    #updating rotation here
+    zombie.rotation=math.degrees(math.atan2(direction_y, direction_x))-90 
   
 ############################################################################################################
 #main function
@@ -699,17 +700,21 @@ bullet=None
 def keyboardListener(key,x,y):
     global player_shooter
     if key==b'd': 
-        if player_shooter.x<740:  
+        if player_shooter.x<screen_w-120:  
             player_shooter.x+=30
+            player_shooter.rotation=270
     elif key==b'a': 
         if player_shooter.x>100:
             player_shooter.x-=30
+            player_shooter.rotation=90
     elif key==b'w': 
-        if player_shooter.y<500: 
+        if player_shooter.y<screen_h-160: 
             player_shooter.y+=30
+            player_shooter.rotation=0
     elif key==b's': 
         if player_shooter.y>100: 
             player_shooter.y-=30
+            player_shooter.rotation=180
 
     elif key==b' ': #if key==b' ' and bullet_active==False:
         bullet1=Bullet(player_shooter.x+100, player_shooter.y+100, player_shooter.rotation)
@@ -728,65 +733,12 @@ def keyboardListener(key,x,y):
        #bullet_active=True
     glutPostRedisplay()
 
-# def keyboardListener(key, x, y):
-#     global bullet,is_paused,game_over_state,player_shooter
-#     if key==b' ':
-#         if is_paused==False and game_over_state<3:
-#             bullet.append([player_shooter.x,-365])
-#     elif key==b'a':
-#         if player_shooter.x >-225 and is_paused==False:
-#             player_shooter.x-=15
-#     elif key==b'd':
-#         if player_shooter.x<225 and is_paused==False:
-#             player_shooter.x+=15
-#     glutPostRedisplay()
-
-# def mouseListener(button, state, x, y):
-#     global  circles_bubs,bullet,miss,game_over_state,score,is_paused,spcl_cir
-
-#     if button==GLUT_LEFT_BUTTON and state ==GLUT_DOWN:
-#         c_x,c_y=convert_coordinate(x, y)
-#         # print(f"Mouse clicked at: {c_x}, {c_y}")  # Debugging 
-#         if -210 < c_x < -180 and 230 < c_y < 280:  # Reset
-#             is_paused=False
-#             print('new game')
-#             circles_bubs=[]
-#             for i in range(3):
-#                 circles_bubs.append(normal_circle())
-#                 # print(bubble)
-#             circles_bubs.sort(key=lambda b:b.x)
-#             spcl_cir=specialcircle()
-#             score = 0
-#             game_over_state = 0
-#             miss = 0
-#             bullet = []
-#         elif -30 < c_x < 30 and 230 < c_y < 280:  # Pause
-#             is_paused = not is_paused
-#             print(f"Pause toggled to: {is_paused}")        
-#         elif 165 < c_x < 220 and 230 < c_y < 280:  # Exit
-#             print('Thanks for playing! Score:', score)
-#             glutLeaveMainLoop()
-#     glutPostRedisplay()
-
-
 
 
 ############################################################################################################
 #UI Functions
 
-# def draw_score():
-#     global score, miss
-#     glColor3f(1,1,1)
-#     glRasterPos2f(150, -380)
-#     score_text = f"Chances: {3-miss}"
-#     for char in score_text:
-#         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18,ord(char))
 
-#     draw_special_circle()
-#     if gameover==False:
-#         draw_score()
-
-#     glutSwapBuffers()
 
 
 ############################################################################################################ 
@@ -796,22 +748,42 @@ zombies=[]
 special_zombies = []
 
 def spawn_zombie():
-    chooze= random.choice([0,1])
+    chooze= random.choice([0,1,2,3])
     if chooze==0:
-        x=random.randint(-150,-50)        
+        x=random.randint(-60,-50)
+        y=random.randint(-60,screen_h+60)        
+    elif chooze==1:
+        x=random.randint(screen_w+60,screen_w+60)
+        y=random.randint(-60,screen_h+60)
+    elif chooze==2:
+        x=random.randint(-40,screen_w+40)
+        y=random.randint(screen_h+50,screen_h+50)
     else:
-        x=random.choice([screen_w+50,screen_w+150])
+        x=random.randint(40,screen_w+40)
+        y=random.randint(-60,-50)          
 
 
-    y=random.randint(-50,screen_h+150)
 
 
     rotation=calculate_rotation(x, y,player_shooter.x,player_shooter.y)
     zombies.append(Zombie(x,y,rotation))
 
 def spawn_special_zombie():
-    x = random.choice([-50, screen_w + 50])
-    y = random.choice([-50, screen_h + 50])
+    chooze= random.choice([0,1,2,3])
+    if chooze==0:
+        x=random.randint(-150,-50)
+        y=random.randint(-50,screen_h+150)        
+    elif chooze==1:
+        x=random.randint(screen_w+50,screen_w+150)
+        y=random.randint(-50,screen_h+150)
+    elif chooze==2:
+        x=random.randint(-50,screen_w+50)
+        y=random.randint(screen_h+50,screen_h+150)
+    else:
+        x=random.randint(-50,screen_w+50)
+        y=random.randint(-150,-50)          
+
+
     rotation = calculate_rotation(x, y, player_shooter.x, player_shooter.y)
     special_zombies.append(Special_Zombie(x, y, rotation))
 
@@ -823,7 +795,7 @@ def calculate_rotation(zombie_x, zombie_y, player_x, player_y):
     # print(angle)
     return angle-90
 # Spawn initial zombies
-for _ in range(5):  # need to adjust the zombie spawning based on difficulty level
+for _ in range(2):  # need to adjust the zombie spawning based on difficulty level
     spawn_zombie()
 for _ in range(1):  
     spawn_special_zombie()
