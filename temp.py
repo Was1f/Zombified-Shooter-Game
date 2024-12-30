@@ -761,7 +761,6 @@ def mainfunc_animate():
             
                 if current_health<=0:
                     current_health=0
-                    is_home_page_running = False
                     gameover=True
 
         else:
@@ -809,35 +808,9 @@ def mouseListener(button, state, x, y):
     if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
         screen_x = x
         screen_y = screen_h - y  
-        # print(f"Mouse clicked at ({screen_x}, {screen_y})")
+        print(f"Mouse clicked at ({screen_x}, {screen_y})")
 
-        if is_home_page_running:
-            if 190 <= screen_x <= 450 and 261 <= screen_y <= 314:
-                is_home_page_running = False
-                gameover = False
-                restart()
-                glutPostRedisplay()
-            elif 190 <= screen_x <= 450 and 200 <= screen_y <= 250:
-                difficulty_levels = ["Easy", "Medium", "Hard"]
-                current_index = difficulty_levels.index(difficulty_level)
-                difficulty_level = difficulty_levels[(current_index + 1) % len(difficulty_levels)]
-                glutPostRedisplay()
-            elif 190 <= screen_x <= 450 and 160 <= screen_y <= 190 and not is_paused:
-                is_home_page_running = False
-                glutLeaveMainLoop()
-        elif gameover:
-            if 0.35 * screen_w <= screen_x <= 0.65 * screen_w:
-                if 0.4 * screen_h <= screen_y <= 0.47 * screen_h:
-                    is_home_page_running = True
-                    gameover = False
-                    glutPostRedisplay()
-                elif 0.3 * screen_h <= screen_y <= 0.37 * screen_h:
-                    gameover = False
-                    restart()
-                    glutPostRedisplay()
-                elif 0.2 * screen_h <= screen_y <= 0.27 * screen_h:
-                    glutLeaveMainLoop()
-        else:
+        if not is_home_page_running:
             if screen_y < screen_h - 60 and not is_paused:
                 dx = screen_x - player_shooter.x
                 dy = screen_y - player_shooter.y
@@ -880,7 +853,22 @@ def mouseListener(button, state, x, y):
 
                 elif base_x <= screen_x <= base_x + button_width and base_y <= screen_y <= base_y + button_height:
                     print("Leave button clicked.")  # Debug
-                    glutLeaveMainLoop()
+                    glutLeaveMainLoop() 
+               
+        else:
+            if 190 <= screen_x <= 450 and 261 <= screen_y <= 314:
+                is_home_page_running = False
+                gameover = False
+                restart()
+                glutPostRedisplay()
+            elif 190 <= screen_x <= 450 and 200 <= screen_y <= 250:
+                difficulty_levels = ["Easy", "Medium", "Hard"]
+                current_index = difficulty_levels.index(difficulty_level)
+                difficulty_level = difficulty_levels[(current_index + 1) % len(difficulty_levels)]
+                glutPostRedisplay()
+            elif 190 <= screen_x <= 450 and 160 <= screen_y <= 190 and not is_paused:
+                is_home_page_running = False
+                glutLeaveMainLoop()
 ############################################################################################################
 #UI Functions
 def render_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
@@ -959,20 +947,7 @@ def draw_top_rectangle():
     # Pause icon
     draw_pause_icon(screen_w-60, screen_h-50,20)
 
-def draw_gameover_screen():
-    glClear(GL_COLOR_BUFFER_BIT)
 
-    glColor3f(1, 0, 0)
-    render_text(0.4 * screen_w, 0.7 * screen_h, "GAME OVER", GLUT_BITMAP_HELVETICA_18)
-
-    glColor3f(1, 1, 1)
-    render_text(0.4 * screen_w, 0.6 * screen_h, f"Score: {current_score}", GLUT_BITMAP_HELVETICA_18)
-
-    draw_button(0.35 * screen_w, 0.4 * screen_h, 0.3 * screen_w, 0.07 * screen_h, "MAIN MENU")
-    draw_button(0.35 * screen_w, 0.3 * screen_h, 0.3 * screen_w, 0.07 * screen_h, "RESTART")
-    draw_button(0.35 * screen_w, 0.2 * screen_h, 0.3 * screen_w, 0.07 * screen_h, "EXIT")
-
-    glutSwapBuffers()
 ############################################################################################################ 
 # initialize
 #player_shooter=Player(150,250,rotation=0)
@@ -1032,11 +1007,10 @@ def call_zombie(difficulty="Easy"):
         spawn_special_zombie()
 call_zombie()
 def restart(): #need to fix this later so a fresh match starts
-    global current_health, current_score, get_highscore, zombies, special_zombies,bullet_list,gameover
+    global current_health, current_score, get_highscore, zombies, special_zombies,bullet_list
     zombies=[]
     special_zombies=[]
     bullet_list=[]
-    gameover=False
     call_zombie()
     if current_score>get_highscore:
         get_highscore=current_score
@@ -1077,7 +1051,7 @@ def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     iterate()
-    if not is_home_page_running and not gameover:
+    if not is_home_page_running:
         if is_paused:
             draw_pause_menu()
         else:
@@ -1094,8 +1068,6 @@ def display():
             trigger_blood_splatter(special_zombies[0])
 
             draw_top_rectangle()
-    elif gameover:
-        draw_gameover_screen()
     else:
         draw_home_page()
     glutSwapBuffers()
