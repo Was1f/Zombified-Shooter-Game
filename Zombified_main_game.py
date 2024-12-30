@@ -16,6 +16,7 @@ current_score = 0
 is_paused = False
 gameover=False
 difficulty_level = "Easy"
+bullet_list=[]
 
 
 tiles_iteration_list=[] #Stores random variation values so the floor doesn't change during gameplay
@@ -708,7 +709,7 @@ def update_zombie_pos(zombie,player,speed=10):
 #main function
 
 def mainfunc_animate():
-    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time
+    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time,bullet_list
 
     current_time=time.time()
     elapsed_time=current_time-last_time
@@ -725,6 +726,10 @@ def mainfunc_animate():
             speed = 8
             damage_combo=3
         if not is_paused:
+            for i in bullet_list:
+                bulletspeed=50 
+                i.x+=bulletspeed*math.cos(math.radians(i.rotation))
+                i.y+=bulletspeed*math.sin(math.radians(i.rotation))          
             for zoms in zombies:
                 update_zombie_pos(zoms,player_shooter,speed) #need to update speed accoring to difficulty level
             for sup_zoms in special_zombies:
@@ -800,6 +805,25 @@ def keyboardListener(key,x,y):
        #bullet_active=True
     glutPostRedisplay()
 
+def mouseListener(button, state, x, y):
+    global player_shooter, bullet_list
+
+    if button==GLUT_LEFT_BUTTON and state==GLUT_DOWN:
+        screen_x=x
+        screen_y=screen_h-y  # Invert Y because screen origin is top-left, game origin is bottom-left
+
+        
+        dx=screen_x-player_shooter.x
+        dy=screen_y-player_shooter.y
+        angle=math.degrees(math.atan2(dy, dx))
+
+        # Create and fire a bullet in the direction of the angle
+        bullet1=Bullet(player_shooter.x, player_shooter.y, angle)
+        bullet_list.append(bullet1)
+        
+        print(f"Bullet fired at angle {angle} towards ({screen_x}, {screen_y})!")
+
+        player_shooter.rotation=angle-90
 
 
 ############################################################################################################
@@ -953,19 +977,17 @@ def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     iterate()
-
     if is_paused:
         draw_pause_menu()
     else:
-
         # generate_floor(screen_h, screen_w)
         draw_player(player_shooter)
         for zombie in zombies:
             draw_zombie(zombie)
         for special_zombie in special_zombies:
             draw_special_zombie(special_zombie)
-        bullet1 = Bullet(360, 556, rotation=45)
-        draw_bullet(bullet1)
+        for bullet in bullet_list:
+            draw_bullet(bullet)
         trigger_blood_splatter(special_zombies[0])
     glutSwapBuffers()
 def iterate():
