@@ -761,7 +761,8 @@ def mainfunc_animate():
                             splatter.append(j)
                             zombies.remove(j)                     
                             current_score+=10
-                            count=0               
+                            count=0    
+                            spawn_zombie()
                             
                 
                 for j in special_zombies:
@@ -773,7 +774,9 @@ def mainfunc_animate():
                             splatter.append(j)
                             special_zombies.remove(j)     
                             current_score+=30
-                            specialcount=0        
+                            specialcount=0 
+                            spawn_special_zombie()
+                            
             for zoms in zombies:
                 update_zombie_pos(zoms,player_shooter,speed) #need to update speed accoring to difficulty level
             for sup_zoms in special_zombies:
@@ -1011,6 +1014,8 @@ def display():
     else:
         
         generate_floor(screen_h, screen_w)
+        for i in splatter:
+            trigger_blood_splatter(i)
         draw_player(player_shooter)
         for zombie in zombies:
             draw_zombie(zombie)
@@ -1018,8 +1023,7 @@ def display():
             draw_special_zombie(special_zombie)
         for bullet in bullet_list:
             draw_bullet(bullet)
-        for i in splatter:
-            trigger_blood_splatter(i)
+       
 
         draw_top_rectangle()
     glutSwapBuffers()
