@@ -115,7 +115,7 @@ def mouse_click(button, state, x, y):
             normalized_x = x / screen_w
             normalized_y = 1 - y / screen_h
 
-            if 0.35 <= normalized_x <= 0.65:
+            if 0.35 <= normalized_x <= 0.6:
                 if 0.58 <= normalized_y <= 0.62:  # Return
                     paused = False
                 elif 0.48 <= normalized_y <= 0.52:  # Restart
@@ -228,17 +228,17 @@ def midpointcircle(r, x_main, y_main,size=2):
             d+=5+2*x-2*y
             y=y- 1
         x=x+1
-def display():
-    glClear(GL_COLOR_BUFFER_BIT)
-    if paused:
-        draw_home_page()
-    else:
-        draw_health_bar()
-        draw_current_score()
-        draw_high_score()
-        draw_pause_button()
-        draw_blood_particles()
-    glutSwapBuffers()
+# def display():
+#     glClear(GL_COLOR_BUFFER_BIT)
+#     if paused:
+#         draw_home_page()
+#     else:
+#         draw_health_bar()
+#         draw_current_score()
+#         draw_high_score()
+#         draw_pause_button()
+#         draw_blood_particles()
+#     glutSwapBuffers()
 
 # Main function
 def main():

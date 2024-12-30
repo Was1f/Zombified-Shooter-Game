@@ -5,12 +5,13 @@ from OpenGL.GLU import *
 import random
 import numpy as np
 import time
+import math
 
 #to do: Use a loop to render shadows
 
 # Global Variables
-screen_w= 1280
-screen_h= 720
+screen_w= 840
+screen_h= 740
 
 tiles_iteration_list=[] #Stores random variation values so the floor doesn't change during gameplay
 #initializing the tiles variation list
@@ -155,7 +156,7 @@ def draw_square_outline(x1,y1,x2,y2,color,size=3):
     mp_line_algo(x1,y1,x2,y1, size)   
     mp_line_algo(x1,y2,x2,y2, size) 
 
-def draw_pixel(x, y,size=2): #drawing the point
+def draw_pixel(x,y,size=2): #drawing the point
     glPointSize(size)
     glBegin(GL_POINTS)
     glVertex2f(x,y)
@@ -236,16 +237,365 @@ def generate_floor(screen_h,screen_w):
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-    glColor4f(0.15, 0.1, 0.35, 0.2)  # Semi-transparent blue color
+    glColor4f(0.15, 0.1, 0.35,0.2)  
+
     draw_pixel(-40,100,200)
     draw_pixel(-40,300,200)
     draw_pixel(-40,500,200)
-    draw_pixel(160,440,200)
-    draw_pixel(360,440,200)
-    draw_pixel(560,440,200)
-    draw_pixel(65,335,10)
-    glDisable(GL_BLEND)  # Disable blending after the line is drawn
+    draw_pixel(160,620,200)
+    draw_pixel(360,620,200)
+    draw_pixel(560,620,200)
+    draw_pixel(760,620,200)
+    draw_pixel(65,515,10)
+    glDisable(GL_BLEND)  
+
+class Zombie:
+    def __init__(self, x, y, rotation=0):
+        self.x=x
+        self.y=y
+        self.rotation=rotation
+        self.is_attacking=False
+    def rotate_point(self,point,angle,center):
+            angle_rad=math.radians(angle)
+            x,y=point
+            cx,cy=center
+            x-=cx
+            y-=cy
+            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
+            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
+            # print(x_new+cx,y_new+cy)
+            return (x_new+cx,y_new+cy)
+        
+class Special_Zombie:
+    def __init__(self, x, y, rotation=0):
+        self.x=x
+        self.y=y
+        self.rotation=rotation
+        self.is_attacking=False
+
+    def rotate_point(self,point,angle,center):
+            angle_rad=math.radians(angle)
+            x,y=point
+            cx,cy=center
+            x-=cx
+            y-=cy
+            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
+            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
+            # print(x_new+cx,y_new+cy)
+            return (x_new+cx,y_new+cy)
+
+class Player:
+    def __init__(self, x, y, rotation=0):
+        self.x=x
+        self.y=y
+        self.rotation=rotation
+    def rotate_point(self,point,angle,center):
+            angle_rad=math.radians(angle)
+            x,y=point
+            cx,cy=center
+            x-=cx
+            y-=cy
+            x_new=x*math.cos(angle_rad)-y*math.sin(angle_rad)
+            y_new=x*math.sin(angle_rad)+y*math.cos(angle_rad)
+            # print(x_new+cx,y_new+cy)
+            return (x_new+cx,y_new+cy)
+def draw_player(player):
+    x, y = player.x, player.y
+    rotation = player.rotation
+
+    def rotate_point_and_draw(x1, y1,size, x2, y2,color):
+            point1=[x1, y1]
+            point2=[x2, y2]
+            center=[x, y]
+            p1 = player.rotate_point(point1,rotation,center)
+            p2 = player.rotate_point(point2,rotation,center)
+            glColor3f(color[0], color[1], color[2])
+            mp_line_algo(p1[0], p1[1], p2[0], p2[1],size)
+
+    #left hand
+    rotate_point_and_draw(x-25, y-7,6,x-10,y+41,[0.498,0.207,0.254])
+    rotate_point_and_draw(x-30, y-8,5,x-15,y+43,[0.498,0.207,0.254])
+    rotate_point_and_draw(x-35, y-7,6,x-20,y+41,[0.498,0.207,0.254])
+
+    rotate_point_and_draw(x-35, y-7,6,x-20,y+41,[0.39,0.172,0.207])
+    rotate_point_and_draw(x-35, y-7,6,x-10,y-7,[0.39,0.172,0.207])
+
+    rotate_point_and_draw(x-10, y+38,4,x-25,y+38,[0.93,0.549,0.48])
+    rotate_point_and_draw(x-8, y+41,4,x-26,y+41,[0.976,0.745,0.65]) #handskin
     
+    #outline
+    #left hand
+    rotate_point_and_draw(x-20, y-10,4,x-5,y+45,[0.047,0.103,0.0]) #closest long
+    rotate_point_and_draw(x-40, y-10,4,x-25,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x-25, y+45,4,x-5,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x-40, y-10,4,x-20,y-10,[0.047,0.103,0.0]) #bottom short
+
+
+    #right hand
+    rotate_point_and_draw(x+25, y-7,6,x+10,y+41,[0.498,0.207,0.254])
+    rotate_point_and_draw(x+30, y-8,5,x+15,y+43,[0.498,0.207,0.254])
+    rotate_point_and_draw(x+35, y-7,6,x+20,y+41,[0.498,0.207,0.254])
+
+    rotate_point_and_draw(x+35, y-7,6,x+20,y+41,[0.39,0.172,0.207])
+    rotate_point_and_draw(x+35, y-7,6,x+10,y-7,[0.39,0.172,0.207])
+
+    rotate_point_and_draw(x+10, y+38,4,x+25,y+38,[0.93,0.549,0.48])
+    rotate_point_and_draw(x+8, y+41,4,x+25,y+41,[0.976,0.745,0.65]) #handskin
+    #outline
+    rotate_point_and_draw(x+20, y-10,4,x+5,y+45,[0.047,0.103,0.0]) #closest long
+    rotate_point_and_draw(x+40, y-10,4,x+25,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x+25, y+45,4,x+5,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x+40, y-10,4,x+20,y-10,[0.047,0.103,0.0]) #bottom short
+
+
+
+    #Head Filled
+    rotate_point_and_draw(x, y+15,10,x,y-15,[0.439,0.243,0.31])
+    rotate_point_and_draw(x+10, y+15,10,x+10,y-15,[0.439,0.243,0.31])
+    rotate_point_and_draw(x-10, y+15,10,x-10,y-15,[0.439,0.243,0.31])
+    rotate_point_and_draw(x+15, y+15,7,x+15,y-15,[0.439,0.243,0.31])
+    # rotate_point_and_draw(x-15, y+15,7,x-15,y-15,[0.439,0.243,0.31])
+
+    #headshadow
+    rotate_point_and_draw(x-13, y+13,10,x-13,y-13,[0.250,0.1490,0.2])
+    rotate_point_and_draw(x-14, y-15,7,x+14,y-15,[0.250,0.1490,0.2])
+    rotate_point_and_draw(x-7, y-10,5,x-3,y-10,[0.250,0.1490,0.2])
+
+    #Eyes
+    #eyeshadow
+    rotate_point_and_draw(x+10,y+15,10,x-10,y+15,[0.9764,0.745,0.650])
+
+    #right Eye
+    rotate_point_and_draw(x+12,y+16,5,x+8,y+16,[0,0,0])
+    rotate_point_and_draw(x+12,y+12,4,x+8,y+12,[1,1,1])
+    #left eye
+    rotate_point_and_draw(x-12,y+16,5,x-8,y+16,[0,0,0])
+    rotate_point_and_draw(x-12,y+12,4,x-8,y+12,[1,1,1])
+
+    #blood head
+    rotate_point_and_draw(x-17, y-16,8,x-10,y-16,[0.219,0.137,0.176])
+    rotate_point_and_draw(x-17, y-16,8,x-17,y-10,[0.219,0.137,0.176])
+    rotate_point_and_draw(x-17, y-16,4,x-17,y-13,[0.219,0.137,0.176])
+    rotate_point_and_draw(x-17, y-16,4,x-13,y-16,[0.219,0.137,0.176])
+
+    rotate_point_and_draw(x+17, y-16,5,x+10,y-16,[0.219,0.137,0.176])
+    rotate_point_and_draw(x+17, y-16,6,x+17,y-10,[0.219,0.137,0.176])
+
+    # Head Outline
+    rotate_point_and_draw(x+20,y+20,4,x-20,y+20,[0.047,0.103,0.0])
+    rotate_point_and_draw(x+20,y+20,4,x+20,y-20,[0.047,0.103,0.0]) 
+    rotate_point_and_draw(x-20, y+20,4,x-20,y-20,[0.047,0.103,0.0])
+    rotate_point_and_draw(x-20, y-20,4,x+20,y-20,[0.047,0.103,0.0])
+
+    # Gun
+    # Body
+    rotate_point_and_draw(x+4,y+44,10,x+4,y+70,[0.278,0.294,0.337])
+    rotate_point_and_draw(x-4,y+44,10,x-4,y+70,[0.278,0.294,0.337])
+    # Outline
+    rotate_point_and_draw(x+8,y+40,4,x+8,y+75,[0.117,0.113,0.125])
+    rotate_point_and_draw(x-8,y+40,4,x-8,y+75,[0.117,0.113,0.125])
+    rotate_point_and_draw(x-8,y+75,4,x+8,y+75,[0.117,0.113,0.125])
+    rotate_point_and_draw(x-8,y+40,4,x+8,y+40,[0.117,0.113,0.125])
+
+    # Ridge
+    rotate_point_and_draw(x-3,y+50,2,x+3,y+50,[0.337,0.337,0.345])
+    rotate_point_and_draw(x-2,y+55,2,x+2,y+55,[0.337,0.337,0.345])
+    # Screw
+    rotate_point_and_draw(x-6,y+65,1,x-6,y+65,[0.6,0.6,0.6])
+    rotate_point_and_draw(x+6,y+65,1,x+6,y+65,[0.6,0.6,0.6])
+  
+    rotate_point_and_draw(x,y+42,2,x,y+46,[0.1,0.1,0.1])
+    # Muzzle
+    rotate_point_and_draw(x-2,y+75,3,x+2,y+75,[0.278,0.294,0.337])
+    rotate_point_and_draw(x-1,y+76,2,x+1,y+76,[0.117,0.113,0.125])
+
+    rotate_point_and_draw(x-8,y+73,2,x+8,y+73,[0.117,0.113,0.125])
+
+
+
+        
+def draw_zombie(zombie):
+    x, y = zombie.x, zombie.y
+    rotation = zombie.rotation
+
+    def rotate_point_and_draw(x1, y1,size, x2, y2,color):
+            point1=[x1, y1]
+            point2=[x2, y2]
+            center=[x, y]
+            p1 = zombie.rotate_point(point1,rotation,center)
+            p2 = zombie.rotate_point(point2,rotation,center)
+            glColor3f(color[0], color[1], color[2])
+            mp_line_algo(p1[0], p1[1], p2[0], p2[1],size)
+
+    #left hand
+    rotate_point_and_draw(x-25, y-7,6,x-25,y+41,[0.147,0.445,0.28])
+    rotate_point_and_draw(x-30, y-8,5,x-30,y+43,[0.147,0.445,0.28])
+    rotate_point_and_draw(x-35, y-7,6,x-35,y+41,[0.147,0.445,0.28])
+
+    rotate_point_and_draw(x-35, y-7,6,x-35,y+41,[0.047,0.345,0.18])
+    rotate_point_and_draw(x-35, y-7,6,x-25,y-7,[0.047,0.345,0.18])
+
+    rotate_point_and_draw(x-34, y+8,5,x-37,y+5,[0.758,0.35,0.35])
+
+    rotate_point_and_draw(x-22, y+42,7,x-22,y+35,[0.3527,0.565,0.3512])#green color
+
+    rotate_point_and_draw(x-37, y+25,3,x-37,y+30,[0.758,0.05,0.05])
+    #outline
+    rotate_point_and_draw(x-20, y-10,4,x-20,y+45,[0.047,0.103,0.0]) #closest long
+    rotate_point_and_draw(x-40, y-10,4,x-40,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x-40, y+45,4,x-20,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x-40, y-10,4,x-20,y-10,[0.047,0.103,0.0]) #bottom short
+
+
+
+     #right hand
+    rotate_point_and_draw(x+25, y-7,6,x+25,y+41,[0.147,0.445,0.28])
+    rotate_point_and_draw(x+30, y-8,5,x+30,y+43,[0.147,0.445,0.28])
+    rotate_point_and_draw(x+35, y-7,6,x+35,y+41,[0.147,0.445,0.28])
+
+    rotate_point_and_draw(x+35, y-7,6,x+35,y+41,[0.047,0.345,0.18])
+    rotate_point_and_draw(x+35, y-7,6,x+25,y-7,[0.047,0.345,0.18])
+
+    rotate_point_and_draw(x+34, y+8,5,x+37,y+5,[0.758,0.35,0.35])
+    rotate_point_and_draw(x+33, y+10,3,x+37,y+7,[0.758,0.05,0.05])
+    rotate_point_and_draw(x+22, y+42,7,x+22,y+35,[0.3527,0.565,0.3512])
+     #outline
+    rotate_point_and_draw(x+20, y-10,4,x+20,y+45,[0.047,0.103,0.0]) #closest long
+    rotate_point_and_draw(x+40, y-10,4,x+40,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x+40, y+45,4,x+20,y+45,[0.047,0.103,0.0])
+    rotate_point_and_draw(x+40, y-10,4,x+20,y-10,[0.047,0.103,0.0]) #bottom short
+
+    #Head Filled
+    rotate_point_and_draw(x, y+15,10,x,y-15,[0.147,0.445,0.28])
+    rotate_point_and_draw(x+10, y+15,10,x+10,y-15,[0.147,0.445,0.28])
+    rotate_point_and_draw(x-10, y+15,10,x-10,y-15,[0.147,0.445,0.28])
+    rotate_point_and_draw(x+15, y+15,7,x+15,y-15,[0.147,0.445,0.28])
+    rotate_point_and_draw(x-15, y+15,7,x-15,y-15,[0.147,0.445,0.28])
+
+    #headshadow
+    rotate_point_and_draw(x-13, y+13,10,x-13,y-13,[0.047,0.345,0.18])
+    rotate_point_and_draw(x-14, y-15,7,x+14,y-15,[0.047,0.345,0.18])
+    rotate_point_and_draw(x-7, y-10,5,x-3,y-10,[0.047,0.345,0.18])
+
+    #Eyes
+    #eyeshadow
+    rotate_point_and_draw(x+10,y+17,3,x-10,y+17,[0.029,0.198,0.1068])
+
+    #right Eye
+    rotate_point_and_draw(x+10,y+15,4,x+16,y+15,[1,1,1])
+    rotate_point_and_draw(x+10,y+12,4,x+16,y+12,[1,1,1])
+    #left eye
+    rotate_point_and_draw(x-10,y+15,4,x-16,y+15,[1,1,1])
+    rotate_point_and_draw(x-10,y+12,4,x-16,y+12,[1,1,1])
+
+    #blood head
+    rotate_point_and_draw(x-17, y-16,8,x-10,y-16,[0.758,0.05,0.05])
+    rotate_point_and_draw(x-17, y-16,8,x-17,y-10,[0.758,0.05,0.05])
+    rotate_point_and_draw(x-17, y-16,4,x-17,y-13,[0.55,0.05,0.05])
+    rotate_point_and_draw(x-17, y-16,4,x-13,y-16,[0.5,0.05,0.05])
+
+    rotate_point_and_draw(x+17, y-16,5,x+10,y-16,[0.758,0.05,0.05])
+    rotate_point_and_draw(x+17, y-16,6,x+17,y-10,[0.758,0.35,0.35])
+
+    # Head Outline
+    rotate_point_and_draw(x+20,y+20,4,x-20,y+20,[0.047,0.103,0.0])
+    rotate_point_and_draw(x+20,y+20,4,x+20,y-20,[0.047,0.103,0.0]) 
+    rotate_point_and_draw(x-20, y+20,4,x-20,y-20,[0.047,0.103,0.0])
+    rotate_point_and_draw(x-20, y-20,4,x+20,y-20,[0.047,0.103,0.0])
+
+    
+def draw_special_zombie(zombie):
+    scale_factor = 1.5  # Adjust scale factor as needed
+    x, y = zombie.x, zombie.y
+    rotation = zombie.rotation
+
+    def rotate_point_and_draw(x1, y1, size, x2, y2, color):
+        point1=[x+(x1-x)*scale_factor,y+(y1-y)*scale_factor]
+        point2=[x+(x2-x)*scale_factor,y+(y2-y)*scale_factor]
+        center=[x, y]
+        p1=zombie.rotate_point(point1,rotation,center)
+        p2=zombie.rotate_point(point2,rotation,center)
+        glColor3f(color[0], color[1], color[2])
+        mp_line_algo(p1[0], p1[1], p2[0], p2[1], size * scale_factor)
+    #left hand
+    rotate_point_and_draw(x-25, y-7,6,x-25,y+41,[0.780,0.670,0.435])
+    rotate_point_and_draw(x-30, y-8,5,x-30,y+43,[0.780,0.670,0.435])
+    rotate_point_and_draw(x-35, y-7,6,x-35,y+41,[0.780,0.670,0.435])
+
+    rotate_point_and_draw(x-35, y-7,6,x-35,y+41,[0.576,0.505,0.353])
+    rotate_point_and_draw(x-35, y-7,6,x-25,y-7,[0.576,0.505,0.353])
+
+    rotate_point_and_draw(x-34, y+8,5,x-37,y+5,[0.33,0.30,0.262])
+# [0.552,0.498,0.498]
+    rotate_point_and_draw(x-22, y+42,7,x-22,y+35,[0.890,0.792,0.572])#green color
+
+    rotate_point_and_draw(x-37, y+25,3,x-37,y+30,[0.152,0.137,0.105])
+    #outline
+    rotate_point_and_draw(x-20, y-10,4,x-20,y+45,[0.094,0.086,0.066]) #closest long
+    rotate_point_and_draw(x-40, y-10,4,x-40,y+45,[0.094,0.086,0.066])
+    rotate_point_and_draw(x-40, y+46,4,x-20,y+46,[0.094,0.086,0.066])
+    rotate_point_and_draw(x-40, y-10,4,x-20,y-10,[0.094,0.086,0.066]) #bottom short
+
+
+
+     #right hand
+    rotate_point_and_draw(x+25, y-7,6,x+25,y+41,[0.780,0.670,0.435])
+    rotate_point_and_draw(x+30, y-8,5,x+30,y+43,[0.780,0.670,0.435])
+    rotate_point_and_draw(x+35, y-7,6,x+35,y+41,[0.780,0.670,0.435])
+
+    rotate_point_and_draw(x+35, y-7,6,x+35,y+41,[0.576,0.505,0.353])
+    rotate_point_and_draw(x+35, y-7,6,x+25,y-7,[0.576,0.505,0.353])
+
+    # rotate_point_and_draw(x+34, y+8,5,x+37,y+5,[0.758,0.05,0.05])
+    rotate_point_and_draw(x+33, y+10,3,x+37,y+7,[0.758,0.35,0.35]) #pink
+    rotate_point_and_draw(x+22, y+42,7,x+22,y+35,[0.890,0.792,0.572])
+     #outline
+    rotate_point_and_draw(x+20, y-10,4,x+20,y+45,[0.094,0.086,0.066]) #closest long
+    rotate_point_and_draw(x+40, y-10,4,x+40,y+45,[0.094,0.086,0.066])
+    rotate_point_and_draw(x+40, y+46,4,x+20,y+46,[0.094,0.086,0.066])
+    rotate_point_and_draw(x+40, y-10,4,x+20,y-10,[0.094,0.086,0.066]) #bottom short
+
+    #Head Filled
+    rotate_point_and_draw(x, y+15,10,x,y-15,[0.301,0.262,0.211])
+    rotate_point_and_draw(x+10, y+15,10,x+10,y-15,[0.301,0.262,0.211])
+    rotate_point_and_draw(x-10, y+15,10,x-10,y-15,[0.301,0.262,0.211])
+    rotate_point_and_draw(x+15, y+15,7,x+15,y-15,[0.301,0.262,0.211])
+    rotate_point_and_draw(x-15, y+15,7,x-15,y-15,[0.301,0.262,0.211])
+
+    #headshadow
+    rotate_point_and_draw(x-13, y+13,10,x-13,y-13,[0.145,0.125,0.094])
+    rotate_point_and_draw(x-14, y-15,7,x+14,y-15,[0.145,0.125,0.094])
+    rotate_point_and_draw(x-7, y-10,5,x-3,y-10,[0.145,0.125,0.094])
+
+    #Eyes
+    #eyeshadow
+    rotate_point_and_draw(x+10,y+17,3,x-10,y+17,[0.145,0.125,0.094])
+
+    #right Eye
+    rotate_point_and_draw(x+10,y+17,4,x+16,y+17,[1,1,1])
+    rotate_point_and_draw(x+10,y+14,4,x+16,y+14,[1,1,1])
+    #left eye
+    rotate_point_and_draw(x-10,y+17,4,x-16,y+17,[1,1,1])
+    rotate_point_and_draw(x-10,y+14,4,x-16,y+14,[1,1,1])
+
+    #blood head
+    rotate_point_and_draw(x-17, y-16,8,x-10,y-16,[0.758,0.05,0.05])
+    rotate_point_and_draw(x-17, y-16,8,x-17,y-10,[0.758,0.05,0.05])
+    rotate_point_and_draw(x-17, y-16,4,x-17,y-13,[0.55,0.05,0.05])
+    rotate_point_and_draw(x-17, y-16,4,x-13,y-16,[0.5,0.05,0.05])
+
+    rotate_point_and_draw(x+17, y-16,5,x+10,y-16,[0.758,0.05,0.05])
+    rotate_point_and_draw(x+17, y-16,6,x+17,y-10,[0.758,0.35,0.35])
+
+    # Head Outline
+    rotate_point_and_draw(x+20,y+20,4,x-20,y+20,[0.094,0.086,0.066])
+    rotate_point_and_draw(x+20,y+20,4,x+20,y-20,[0.094,0.086,0.066]) 
+    rotate_point_and_draw(x-20, y+20,4,x-20,y-20,[0.094,0.086,0.066])
+    rotate_point_and_draw(x-20, y-20,4,x+20,y-20,[0.094,0.086,0.066])
+
+
+        
+  
 ############################################################################################################
 #main function
 
@@ -324,9 +674,21 @@ def display():
     glLoadIdentity()
     
     iterate()
-
     generate_floor(screen_h, screen_w)
-
+    zombie1 = Player(100, 200, rotation=0)
+    zombie2 = Zombie(300, 200, rotation=0)
+    zombie3 = Special_Zombie(556, 200, rotation=180)
+    zombie4 = Player(100, 600, rotation=90)
+    zombie5 = Player(500, 500, rotation=215)
+    # draw_zombie(zombie1)
+    draw_zombie(zombie2)
+    draw_special_zombie(zombie3)
+    draw_player(zombie1)
+    draw_player(zombie4)
+    draw_player(zombie5)
+    # draw_zombie(zombie3)
+    # draw_zombie(zombie4)
+    # draw_zombie(zombie5)
     glutSwapBuffers()
 def iterate():
     global screen_h, screen_w
@@ -341,7 +703,6 @@ glutInit()
 glutInitWindowSize(screen_w, screen_h)
 glutInitWindowPosition(200,20)
 glutInitDisplayMode(GLUT_RGBA)
-
 glutCreateWindow(b"Zombified: Shooter Game")
 
 
@@ -356,7 +717,5 @@ glutDisplayFunc(display)
 glutIdleFunc(mainfunc_animate)
 # glutMouseFunc(mouseListener)
 # glutKeyboardFunc(keyboardListener)
-
-
 
 glutMainLoop()
