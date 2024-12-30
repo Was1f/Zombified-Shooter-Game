@@ -16,6 +16,9 @@ tiles_iteration_list=[] #Stores random variation values so the floor doesn't cha
 for _ in range(0,screen_w*screen_h,1000):
     tiles_iteration_list.append(random.randint(1,50))
 
+
+
+
 ############################################################################################################
 ##-------------------------------------------##
 #classes
@@ -662,13 +665,32 @@ def trigger_blood_splatter(zombie):
         for _ in range(1): 
             blood_splatter((zombie.x,zombie.y))
 
+def update_zombie_pos(zombie,player,speed=20):
+    direction_x=player.x-zombie.x
+    direction_y=player.y-zombie.y
+    distance=math.sqrt(direction_x**2+direction_y**2)
+    if distance>0:
+        direction_x/=distance
+        direction_y/=distance
+    zombie.x+=direction_x*speed
+    zombie.y+=direction_y*speed
         
   
 ############################################################################################################
 #main function
 
 def mainfunc_animate():
-    return None
+    global player_shooter,zombies,special_zombies
+
+    # Update each zombie's position
+    for zoms in zombies:
+        update_zombie_pos(zoms,player_shooter) #need to update speed accoring to difficulty level
+    for sup_zoms in special_zombies:
+        update_zombie_pos(sup_zoms,player_shooter)
+
+    # Redraw the scene
+    glutPostRedisplay()
+
 
 ############################################################################################################
 #input handling functions
@@ -735,31 +757,60 @@ def mainfunc_animate():
 
 
 ############################################################################################################ 
+# initialize
+player_shooter=Player(150,250,rotation=0)
+zombies=[]
+special_zombies = []
+
+def spawn_zombie():
+    chooze= random.choice([0,1])
+    if chooze==0:
+        x=random.randint(-150,-50)        
+    else:
+        x=random.choice([screen_w+50,screen_w+150])
+
+
+    y=random.randint(-50,screen_h+150)
+
+
+    rotation=calculate_rotation(x, y,player_shooter.x,player_shooter.y)
+    zombies.append(Zombie(x,y,rotation))
+
+def spawn_special_zombie():
+    x = random.choice([-50, screen_w + 50])
+    y = random.choice([-50, screen_h + 50])
+    rotation = calculate_rotation(x, y, player_shooter.x, player_shooter.y)
+    special_zombies.append(Special_Zombie(x, y, rotation))
+
+# Function to calculate rotation to face the player
+def calculate_rotation(zombie_x, zombie_y, player_x, player_y):
+    direction_x=player_x-zombie_x
+    direction_y=player_y-zombie_y
+    angle=math.degrees(math.atan2(direction_y, direction_x)) #getting the slope in radians and making it in degrees
+    # print(angle)
+    return angle-90
+# Spawn initial zombies
+for _ in range(5):  # need to adjust the zombie spawning based on difficulty level
+    spawn_zombie()
+for _ in range(1):  
+    spawn_special_zombie()
+
+
 #glui functions
 def display():
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     
     iterate()
     generate_floor(screen_h, screen_w)
-    zombie1 = Player(150, 250, rotation=0)
-    zombie2 = Zombie(300, 200, rotation=0)
-    zombie3 = Special_Zombie(556, 200, rotation=180)
-    zombie4 = Player(150, 650, rotation=90)
-    zombie5 = Player(550, 550, rotation=215)
-    # draw_zombie(zombie1)
-    draw_zombie(zombie2)
-    draw_special_zombie(zombie3)
-    draw_player(zombie1)
-    draw_player(zombie4)
-    draw_player(zombie5)
-    bullet1=Bullet(360, 556, rotation=45)
+    draw_player(player_shooter)
+    for zombie in zombies:
+        draw_zombie(zombie)
+    for special_zombie in special_zombies:
+        draw_special_zombie(special_zombie)
+    bullet1 = Bullet(360, 556, rotation=45)
     draw_bullet(bullet1)
-    # draw_zombie(zombie3)
-    # draw_zombie(zombie4)
-    # draw_zombie(zombie5)
-    trigger_blood_splatter(zombie2)
+    trigger_blood_splatter(special_zombies[0])
     glutSwapBuffers()
 def iterate():
     global screen_h, screen_w
@@ -776,10 +827,6 @@ glutInitWindowPosition(200,20)
 glutInitDisplayMode(GLUT_RGBA)
 glutCreateWindow(b"Zombified: Shooter Game")
 
-
-# uq_cir=normal_circle()
-# player_shooter=shooter()
-# spcl_cir=specialcircle()
 
 #fullscreen mode in options
 # glutFullScreen()
