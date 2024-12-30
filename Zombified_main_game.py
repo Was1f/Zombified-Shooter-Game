@@ -671,28 +671,47 @@ def blood_splatter(position):
         draw_pixel(scatter_x, scatter_y,droplet_size)
 
 
-def trigger_blood_splatter(zombie):
-    if zombie.bloodactive:
-        for _ in range(1): 
-            blood_splatter((zombie.x,zombie.y))
+def trigger_blood_splatter(splatter):
+    for _ in range(1):
+        blood_splatter((splatter.x,splatter.y))
 
-def checkIfCollision(player,zombie):
-    player_min_x=player.x-35
-    player_max_x=player.x+35
-    player_min_y=player.y-20
-    player_max_y=player.y+70
+def checkIfCollision(object,player,type):
+    if type!="bullettype":
+        player_min_x=player.x-35
+        player_max_x=player.x+33
+        player_min_y=player.y-20
+        player_max_y=player.y+70
+    else:
+        object_min_x=object.x
+        object_max_x=object.x+10
+        object_min_y=object.y
+        object_max_y=object.y+10
 
-    zombie_min_x=zombie.x-35
-    zombie_max_x=zombie.x+35
-    zombie_min_y=zombie.y-20
-    zombie_max_y=zombie.y+45
+        player_min_x=player.x-35
+        player_max_x=player.x+33
+        player_min_y=player.y-20
+        player_max_y=player.y+70
+
+    if type=="normalzombie":
+        object_min_x=object.x-35
+        object_max_x=object.x+35
+        object_min_y=object.y-20
+        object_max_y=object.y+45
+    elif type=="specialzombie":
+        object_min_x=object.x-60
+        object_max_x=object.x+60
+        object_min_y=object.y-30
+        object_max_y=object.y+67.5
 
 
-    if player_max_x>=zombie_min_x and player_min_x<=zombie_max_x:
-        if player_max_y>=zombie_min_y and player_min_y<=zombie_max_y:
+
+
+    if player_max_x>=object_min_x and player_min_x<=object_max_x:
+        if player_max_y>=object_min_y and player_min_y<=object_max_y:
             return True 
 
     return False
+    
 def update_zombie_pos(zombie,player,speed=10):
     direction_x=player.x-zombie.x
     direction_y=player.y-zombie.y
@@ -707,9 +726,12 @@ def update_zombie_pos(zombie,player,speed=10):
   
 ############################################################################################################
 #main function
-
+count=0
+specialcount=0
+current_score=0
+splatter=[]
 def mainfunc_animate():
-    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time,bullet_list
+    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time,bullet_list,count,specialcount,current_score,splatter
 
     current_time=time.time()
     elapsed_time=current_time-last_time
@@ -729,7 +751,29 @@ def mainfunc_animate():
             for i in bullet_list:
                 bulletspeed=50 
                 i.x+=bulletspeed*math.cos(math.radians(i.rotation))
-                i.y+=bulletspeed*math.sin(math.radians(i.rotation))          
+                i.y+=bulletspeed*math.sin(math.radians(i.rotation)) 
+                for j in zombies:
+                    if checkIfCollision(i,j,type="bullettype"):
+                        bullet_list.remove(i)
+                        print("bullet+zombie collision",count)
+                        count+=1
+                        if count>2:
+                            splatter.append(j)
+                            zombies.remove(j)                     
+                            current_score+=10
+                            count=0               
+                            
+                
+                for j in special_zombies:
+                    if checkIfCollision(i,j,type="bullettype"):
+                        bullet_list.remove(i)
+                        print("bullet+zombie collision",current_score)
+                        specialcount+=1
+                        if specialcount>4:
+                            splatter.append(j)
+                            special_zombies.remove(j)     
+                            current_score+=30
+                            specialcount=0        
             for zoms in zombies:
                 update_zombie_pos(zoms,player_shooter,speed) #need to update speed accoring to difficulty level
             for sup_zoms in special_zombies:
@@ -789,21 +833,12 @@ def keyboardListener(key,x,y):
             player_shooter.y-=30
             player_shooter.rotation=180
 
-    elif key==b' ': #if key==b' ' and bullet_active==False:
-        bullet1=Bullet(player_shooter.x+100, player_shooter.y+100, player_shooter.rotation)
-
     elif key==b'k':
         player_shooter.rotation-=10
 
     elif key==b'j':
-        player_shooter.rotation+=10
-    elif key==b'w' and key==b'd':
-        if player_shooter.y>100: 
-            player_shooter.y-=10
-
-        
-        
-       #bullet_active=True
+        player_shooter.rotation+=10       
+    
     glutPostRedisplay()
 
 def mouseListener(button, state, x, y):
@@ -983,7 +1018,8 @@ def display():
             draw_special_zombie(special_zombie)
         for bullet in bullet_list:
             draw_bullet(bullet)
-        trigger_blood_splatter(special_zombies[0])
+        for i in splatter:
+            trigger_blood_splatter(i)
 
         draw_top_rectangle()
     glutSwapBuffers()
