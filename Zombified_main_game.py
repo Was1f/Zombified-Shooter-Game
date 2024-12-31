@@ -10,7 +10,7 @@ import math
 # Global Variables
 screen_w= 640
 screen_h= 540
-current_health=50
+current_health=100
 get_highscore = 0
 current_score = 0   
 is_paused = False
