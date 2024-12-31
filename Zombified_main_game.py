@@ -712,6 +712,7 @@ def checkIfCollision(object,player,type):
             return True 
 
     return False
+    
 def update_zombie_pos(zombie,player,speed=10):
     direction_x=player.x-zombie.x
     direction_y=player.y-zombie.y
