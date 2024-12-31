@@ -93,10 +93,9 @@ class Bullet:
         self.y = y
         self.rotation = rotation
         self.speed = speed
-        self.is_active = True  # to track whether the bullet is still active
+        self.is_active = True  
 
     def move(self):
-        # Calculate new position based on the rotation and speed
         angle_rad = math.radians(self.rotation)
         self.x += self.speed * math.cos(angle_rad)
         self.y += self.speed * math.sin(angle_rad)
@@ -926,25 +925,24 @@ def mouseListener(button, state, x, y):
 
                 if base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 3 <= screen_y <= base_y + (button_height + spacing) * 3 + button_height:
                     # print("Return button clicked.") 
-                    is_paused = False  # Resume the game
+                    is_paused = False  
                     glutPostRedisplay()
 
                 elif base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 2 <= screen_y <= base_y + (button_height + spacing) * 2 + button_height:
                     # print("Restart button clicked.")
-                    restart()  # Restart the game
+                    restart()  
                     is_paused = False
                     glutPostRedisplay()
 
                 elif base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 1 <= screen_y <= base_y + (button_height + spacing) * 1 + button_height:
-                    # print("Difficulty button clicked.")  # Debug
                     difficulty_levels = ["Easy", "Medium", "Hard"]
                     current_index = difficulty_levels.index(difficulty_level)
                     difficulty_level = difficulty_levels[(current_index + 1) % len(difficulty_levels)]
-                    # call_zombie(difficulty_level)
+    
                     glutPostRedisplay()
 
                 elif base_x <= screen_x <= base_x + button_width and base_y <= screen_y <= base_y + button_height:
-                    # print("Leave button clicked.")  # Debug
+                    # print("Leave button clicked.")  
                     glutLeaveMainLoop()
 ############################################################################################################
 #UI Functions
@@ -970,9 +968,8 @@ def draw_button(x, y, width, height, label):
     mp_line_algo(x + width, y, x + width, y + height, 2)
     mp_line_algo(x + width, y + height, x, y + height, 2)
     mp_line_algo(x, y + height, x, y, 2)
-    
-    # Draw button label
-    glColor3f(0, 0, 0)  # Text color
+ 
+    glColor3f(0, 0, 0)  
     render_text(x + 30, y + height / 3, label)
 
 def draw_pause_menu():
@@ -980,7 +977,7 @@ def draw_pause_menu():
     spacing = 20
     base_x = int(screen_w - button_width) / 2
     base_y = int(screen_h - (button_height * 4 + spacing * 3)) / 2
-    # Draw buttons
+
     draw_button(base_x, base_y + (button_height + spacing) * 3, button_width, button_height, "Return")
     draw_button(base_x, base_y + (button_height + spacing) * 2, button_width, button_height, "Restart")
     draw_button(base_x, base_y + (button_height + spacing) * 1, button_width, button_height, f"Difficulty: {difficulty_level}")
@@ -989,10 +986,9 @@ def draw_pause_menu():
 def draw_health_bar(x, y, width, height, health):
     
     glColor3f(0,0.3,0.3)
-    # Draw health bar outline
+
     mp_line_algo(x, y, x + width, y, 20)
 
-    # Draw current health
     glColor3f(0.5,1,1)
     if health>0:
         health_width = width * (health / 100)
@@ -1004,9 +1000,9 @@ def draw_health_bar(x, y, width, height, health):
 def draw_pause_icon(x, y, size):
     bar_width = size / 4
     spacing = bar_width / 2
-    # Draw left bar
+    # left bar
     mp_line_algo(x, y, x, y + size/1.5, bar_width)
-    # Draw right bar
+    # right bar
     mp_line_algo(x+bar_width+spacing,y,x+bar_width+spacing,y+size/1.5,bar_width)
 # Draw top rectangle
 def draw_top_rectangle():
