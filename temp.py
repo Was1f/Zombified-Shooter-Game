@@ -330,11 +330,11 @@ def generate_floor(screen_h,screen_w):
     draw_pixel(-40,100,200)
     draw_pixel(-40,300,200)
     draw_pixel(-40,500,200)
-    draw_pixel(160,620,200)
-    draw_pixel(360,620,200)
-    draw_pixel(560,620,200)
-    draw_pixel(760,620,200)
-    draw_pixel(65,515,10)
+    draw_pixel(160,480,200)
+    draw_pixel(360,480,200)
+    draw_pixel(560,480,200)
+
+    draw_pixel(65,375,10)
     glDisable(GL_BLEND)  
 
 
@@ -671,25 +671,44 @@ def blood_splatter(position):
         draw_pixel(scatter_x, scatter_y,droplet_size)
 
 
-def trigger_blood_splatter(zombie):
-    if zombie.bloodactive:
-        for _ in range(1): 
-            blood_splatter((zombie.x,zombie.y))
-
-def checkIfCollision(player,zombie):
-    player_min_x=player.x-35
-    player_max_x=player.x+35
-    player_min_y=player.y-20
-    player_max_y=player.y+70
-
-    zombie_min_x=zombie.x-35
-    zombie_max_x=zombie.x+35
-    zombie_min_y=zombie.y-20
-    zombie_max_y=zombie.y+45
+def trigger_blood_splatter(splatter):
+    #if zombie.bloodactive:
+        #for _ in range(1): 
+            #blood_splatter((zombie.x,zombie.y))
+    for _ in range(1):
+        blood_splatter((splatter.x,splatter.y))
 
 
-    if player_max_x>=zombie_min_x and player_min_x<=zombie_max_x:
-        if player_max_y>=zombie_min_y and player_min_y<=zombie_max_y:
+def checkIfCollision(object,player,type):
+    if type!="bullettype":
+        player_min_x=player.x-35
+        player_max_x=player.x+33
+        player_min_y=player.y-20
+        player_max_y=player.y+70
+    else:
+        object_min_x=object.x
+        object_max_x=object.x+10
+        object_min_y=object.y
+        object_max_y=object.y+10
+
+        player_min_x=player.x-35
+        player_max_x=player.x+33
+        player_min_y=player.y-20
+        player_max_y=player.y+70
+
+    if type=="normalzombie":
+        object_min_x=object.x-35
+        object_max_x=object.x+35
+        object_min_y=object.y-20
+        object_max_y=object.y+45
+    elif type=="specialzombie":
+        object_min_x=object.x-60
+        object_max_x=object.x+60
+        object_min_y=object.y-30
+        object_max_y=object.y+67.5
+
+    if player_max_x>=object_min_x and player_min_x<=object_max_x:
+        if player_max_y>=object_min_y and player_min_y<=object_max_y:
             return True 
 
     return False
@@ -707,15 +726,33 @@ def update_zombie_pos(zombie,player,speed=10):
   
 ############################################################################################################
 #main function
-
+count=0
+specialcount=0
+current_score=0
+splatter=[]
+splatter_time=0
 def mainfunc_animate():
-    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time,bullet_list, is_home_page_running
+    global player_shooter,zombies,special_zombies, current_health, is_paused, gameover, last_time,bullet_list, is_home_page_running,count,specialcount,current_score,splatter_time
+    if difficulty_level=="Easy":
+        z=2
+        s=1
+    elif difficulty_level=="Medium":
+        z=4
+        s=1
+    elif difficulty_level=="Hard":
+        z=5
+        s=2
     if is_home_page_running==False:
         current_time=time.time()
         elapsed_time=current_time-last_time
 
         if elapsed_time >= FRAME_TIME:
             last_time = current_time
+            splatter_time+=1
+            if splatter_time>20:
+                if len(splatter)>0:
+                    splatter.pop(0)
+                    splatter_time=0
             if difficulty_level == "Easy":
                 speed = 2
                 damage_combo=1
@@ -731,9 +768,35 @@ def mainfunc_animate():
                     i.x+=bulletspeed*math.cos(math.radians(i.rotation))
                     i.y+=bulletspeed*math.sin(math.radians(i.rotation))   
 
-                    if i.x < 0 or i.x > screen_w or i.y < 0 or i.y > screen_h:
+                    if i.x < -20 or i.x > screen_w+20 or i.y < -40 or i.y > screen_h+40:
                         bullet_list.remove(i)     
+                    for j in zombies:
+                        if checkIfCollision(i,j,type="bullettype"):
+                            if len(bullet_list)>0:
+                                bullet_list.remove(i)
+                            # print("bullet+zombie collision",count)
+                            count+=1
+                            if count>2:
+                                splatter.append(j)
+                                zombies.remove(j)
+                                
+                                current_score+=10*damage_combo
+                                count=0
+                                spawn_zombie()
 
+                    for j in special_zombies:
+                        if checkIfCollision(i,j,type="bullettype"):
+                            if len(bullet_list)>0:
+                                bullet_list.remove(i)
+                            # print("bullet+zombie collision",current_score)
+                            specialcount+=1
+                            if specialcount>5:
+                                splatter.append(j)
+                                special_zombies.remove(j)
+                                spawn_special_zombie()
+                                
+                                current_score+=30*damage_combo
+                                specialcount=0
                 for zoms in zombies:
                     update_zombie_pos(zoms,player_shooter,speed) #need to update speed accoring to difficulty level
                 for sup_zoms in special_zombies:
@@ -741,7 +804,7 @@ def mainfunc_animate():
 
 
                 for i in zombies:
-                    if checkIfCollision(i,player_shooter):
+                    if checkIfCollision(i,player_shooter,type="normalzombie"):
                         if i.timer==0:
                             current_health-=1* damage_combo
                             # print("collision")
@@ -750,7 +813,7 @@ def mainfunc_animate():
                         else:
                             i.timer-=1
                 for i in special_zombies:
-                    if checkIfCollision(i,player_shooter):
+                    if checkIfCollision(i,player_shooter,type='specialzombie'):
                         if i.timer==0:
                             current_health-=3* damage_combo
                             # print("Special collision")
@@ -761,6 +824,7 @@ def mainfunc_animate():
             
                 if current_health<=0:
                     current_health=0
+                    is_home_page_running = False
                     gameover=True
 
         else:
@@ -808,54 +872,9 @@ def mouseListener(button, state, x, y):
     if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
         screen_x = x
         screen_y = screen_h - y  
-        print(f"Mouse clicked at ({screen_x}, {screen_y})")
+        # print(f"Mouse clicked at ({screen_x}, {screen_y})")
 
-        if not is_home_page_running:
-            if screen_y < screen_h - 60 and not is_paused:
-                dx = screen_x - player_shooter.x
-                dy = screen_y - player_shooter.y
-                angle = math.degrees(math.atan2(dy, dx))
-
-                bullet1 = Bullet(player_shooter.x, player_shooter.y, angle)
-                if len(bullet_list) < 4:
-                    bullet_list.append(bullet1)
-                
-                print(f"Bullet fired at angle {angle} towards ({screen_x}, {screen_y})!")
-
-                player_shooter.rotation = angle - 90
-            else:
-                if 570 <= screen_x <= 595 and 490 <= screen_y <= 510 and not is_paused:
-                    is_paused = not is_paused
-                    glutPostRedisplay()
-            if is_paused:
-                button_width, button_height = 200, 50
-                spacing = 20
-                base_x = (screen_w - button_width) / 2
-                base_y = (screen_h - (button_height * 4 + spacing * 3)) / 2
-
-                if base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 3 <= screen_y <= base_y + (button_height + spacing) * 3 + button_height:
-                    print("Return button clicked.") 
-                    is_paused = False  # Resume the game
-                    glutPostRedisplay()
-
-                elif base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 2 <= screen_y <= base_y + (button_height + spacing) * 2 + button_height:
-                    print("Restart button clicked.")
-                    restart()  # Restart the game
-                    is_paused = False
-                    glutPostRedisplay()
-
-                elif base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 1 <= screen_y <= base_y + (button_height + spacing) * 1 + button_height:
-                    print("Difficulty button clicked.")  # Debug
-                    difficulty_levels = ["Easy", "Medium", "Hard"]
-                    current_index = difficulty_levels.index(difficulty_level)
-                    difficulty_level = difficulty_levels[(current_index + 1) % len(difficulty_levels)]
-                    glutPostRedisplay()
-
-                elif base_x <= screen_x <= base_x + button_width and base_y <= screen_y <= base_y + button_height:
-                    print("Leave button clicked.")  # Debug
-                    glutLeaveMainLoop() 
-               
-        else:
+        if is_home_page_running:
             if 190 <= screen_x <= 450 and 261 <= screen_y <= 314:
                 is_home_page_running = False
                 gameover = False
@@ -869,6 +888,63 @@ def mouseListener(button, state, x, y):
             elif 190 <= screen_x <= 450 and 160 <= screen_y <= 190 and not is_paused:
                 is_home_page_running = False
                 glutLeaveMainLoop()
+        elif gameover:
+            if 0.35 * screen_w <= screen_x <= 0.65 * screen_w:
+                if 0.4 * screen_h <= screen_y <= 0.47 * screen_h:
+                    is_home_page_running = True
+                    gameover = False
+                    glutPostRedisplay()
+                elif 0.3 * screen_h <= screen_y <= 0.37 * screen_h:
+                    gameover = False
+                    restart()
+                    glutPostRedisplay()
+                elif 0.2 * screen_h <= screen_y <= 0.27 * screen_h:
+                    glutLeaveMainLoop()
+        else:
+            if screen_y < screen_h - 60 and not is_paused:
+                dx = screen_x - player_shooter.x
+                dy = screen_y - player_shooter.y
+                angle = math.degrees(math.atan2(dy, dx))
+
+                bullet1 = Bullet(player_shooter.x, player_shooter.y, angle)
+                if len(bullet_list) < 3:
+                    bullet_list.append(bullet1)
+                
+                # print(f"Bullet fired at angle {angle} towards ({screen_x}, {screen_y})!")
+
+                player_shooter.rotation = angle - 90
+            else:
+                if 570 <= screen_x <= 595 and 490 <= screen_y <= 510 and not is_paused:
+                    is_paused = not is_paused
+                    glutPostRedisplay()
+            if is_paused:
+                button_width, button_height = 200, 50
+                spacing = 20
+                base_x = (screen_w - button_width) / 2
+                base_y = (screen_h - (button_height * 4 + spacing * 3)) / 2
+
+                if base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 3 <= screen_y <= base_y + (button_height + spacing) * 3 + button_height:
+                    # print("Return button clicked.") 
+                    is_paused = False  # Resume the game
+                    glutPostRedisplay()
+
+                elif base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 2 <= screen_y <= base_y + (button_height + spacing) * 2 + button_height:
+                    # print("Restart button clicked.")
+                    restart()  # Restart the game
+                    is_paused = False
+                    glutPostRedisplay()
+
+                elif base_x <= screen_x <= base_x + button_width and base_y + (button_height + spacing) * 1 <= screen_y <= base_y + (button_height + spacing) * 1 + button_height:
+                    # print("Difficulty button clicked.")  # Debug
+                    difficulty_levels = ["Easy", "Medium", "Hard"]
+                    current_index = difficulty_levels.index(difficulty_level)
+                    difficulty_level = difficulty_levels[(current_index + 1) % len(difficulty_levels)]
+                    # call_zombie(difficulty_level)
+                    glutPostRedisplay()
+
+                elif base_x <= screen_x <= base_x + button_width and base_y <= screen_y <= base_y + button_height:
+                    # print("Leave button clicked.")  # Debug
+                    glutLeaveMainLoop()
 ############################################################################################################
 #UI Functions
 def render_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
@@ -947,7 +1023,20 @@ def draw_top_rectangle():
     # Pause icon
     draw_pause_icon(screen_w-60, screen_h-50,20)
 
+def draw_gameover_screen():
+    glClear(GL_COLOR_BUFFER_BIT)
 
+    glColor3f(1, 0, 0)
+    render_text(0.4 * screen_w, 0.7 * screen_h, "GAME OVER", GLUT_BITMAP_HELVETICA_18)
+
+    glColor3f(1, 1, 1)
+    render_text(0.4 * screen_w, 0.6 * screen_h, f"Score: {current_score}", GLUT_BITMAP_HELVETICA_18)
+
+    draw_button(0.35 * screen_w, 0.4 * screen_h, 0.3 * screen_w, 0.07 * screen_h, "MAIN MENU")
+    draw_button(0.35 * screen_w, 0.3 * screen_h, 0.3 * screen_w, 0.07 * screen_h, "RESTART")
+    draw_button(0.35 * screen_w, 0.2 * screen_h, 0.3 * screen_w, 0.07 * screen_h, "EXIT")
+
+    glutSwapBuffers()
 ############################################################################################################ 
 # initialize
 #player_shooter=Player(150,250,rotation=0)
@@ -1001,16 +1090,29 @@ def calculate_rotation(zombie_x, zombie_y, player_x, player_y):
     return angle-90
 
 def call_zombie(difficulty="Easy"):
-    for _ in range(2):
+    if difficulty=="Easy":
+        z=2
+        s=1
+    elif difficulty=="Medium":
+        z=4
+        s=1
+    elif difficulty=="Hard":
+        z=5
+        s=2
+    for _ in range(z):
         spawn_zombie()
-    for _ in range(1):  
+    for _ in range(s):  
         spawn_special_zombie()
-call_zombie()
+call_zombie(difficulty_level)
 def restart(): #need to fix this later so a fresh match starts
-    global current_health, current_score, get_highscore, zombies, special_zombies,bullet_list
+    global current_health, current_score, get_highscore, zombies, special_zombies,bullet_list,gameover,splatter,specialcount,count
     zombies=[]
+    splatter=[]
     special_zombies=[]
     bullet_list=[]
+    count=0
+    specialcount=0
+    gameover=False
     call_zombie()
     if current_score>get_highscore:
         get_highscore=current_score
@@ -1051,12 +1153,14 @@ def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
     iterate()
-    if not is_home_page_running:
+    if not is_home_page_running and not gameover:
         if is_paused:
             draw_pause_menu()
         else:
-            
-            # generate_floor(screen_h, screen_w)
+            generate_floor(screen_h, screen_w)
+            for i in splatter:
+                trigger_blood_splatter(i)
+
             for bullet in bullet_list:
                 draw_bullet(bullet)
             draw_player(player_shooter)
@@ -1065,9 +1169,10 @@ def display():
             for special_zombie in special_zombies:
                 draw_special_zombie(special_zombie)
 
-            trigger_blood_splatter(special_zombies[0])
 
             draw_top_rectangle()
+    elif gameover:
+        draw_gameover_screen()
     else:
         draw_home_page()
     glutSwapBuffers()
